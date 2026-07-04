@@ -662,7 +662,7 @@ export default function App() {
                   <div className={`text-[11px] uppercase tracking-wide font-semibold mb-1.5 ${dark ? 'text-slate-500' : 'text-slate-400'}`}>Role type</div>
                   <div className="flex flex-wrap gap-2">
                     {[['all', 'All roles'], ['it', 'IT roles'], ['nonit', 'Non-IT roles']].map(([val, label]) => (
-                      <button key={val} onClick={() => setFilters((f) => ({ ...f, domain: val }))} className={`h-9 px-4 rounded-full text-sm font-medium border transition ${filters.domain === val ? 'bg-slate-900 text-white border-slate-900' : (dark ? 'border-slate-700 text-slate-300 hover:border-slate-600' : 'border-slate-200 text-slate-600 hover:border-slate-300')}`}>{label}</button>
+                      <button key={val} onClick={() => setFilters((f) => ({ ...f, domain: val }))} className={`h-9 px-4 rounded-full text-sm font-medium border transition ${filters.domain === val ? 'bg-emerald-600 text-white border-emerald-600' : (dark ? 'border-slate-700 text-slate-300 hover:border-slate-600' : 'border-slate-200 text-slate-600 hover:border-slate-300')}`}>{label}</button>
                     ))}
                   </div>
                 </div>
