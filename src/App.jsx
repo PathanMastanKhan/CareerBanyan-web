@@ -557,8 +557,6 @@ export default function App() {
     }
   };
 
-  const newestFirst = useMemo(() => [...jobs].sort((a, b) => a.daysAgo - b.daysAgo), [jobs]);
-
   const LOCATIONS = useMemo(() => Array.from(new Set(jobs.map((j) => j.city))).sort(), [jobs]);
   const CATEGORIES = useMemo(() => Array.from(new Set(jobs.map((j) => j.category))).sort(), [jobs]);
   const COMPANIES = useMemo(() => Array.from(new Set(jobs.map((j) => j.company))), [jobs]);
@@ -701,32 +699,25 @@ export default function App() {
                   </button>
                 </div>
 
-                <div className="mt-4">
-                  <div className={`text-[11px] uppercase tracking-wide font-semibold mb-1.5 ${dark ? 'text-slate-500' : 'text-slate-400'}`}>Role type</div>
-                  <div className="flex flex-wrap gap-2">
-                    {[['all', 'All roles'], ['it', 'IT roles'], ['nonit', 'Non-IT roles']].map(([val, label]) => (
-                      <button key={val} onClick={() => setDraftFilters((f) => ({ ...f, domain: val }))} className={`h-9 px-4 rounded-full text-sm font-medium border transition ${draftFilters.domain === val ? 'bg-emerald-600 text-white border-emerald-600' : (dark ? 'border-slate-700 text-slate-300 hover:border-slate-600' : 'border-slate-200 text-slate-600 hover:border-slate-300')}`}>{label}</button>
-                    ))}
+                <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className={`rounded-xl border p-3 ${dark ? 'border-slate-800 bg-slate-800/30' : 'border-slate-100 bg-slate-50'}`}>
+                    <div className={`text-[11px] uppercase tracking-wide font-semibold mb-2 ${dark ? 'text-slate-500' : 'text-slate-400'}`}>Role type</div>
+                    <div className="no-scrollbar flex gap-2 overflow-x-auto pb-1">
+                      {[['all', 'All roles'], ['it', 'IT roles'], ['nonit', 'Non-IT roles']].map(([val, label]) => (
+                        <button key={val} onClick={() => setDraftFilters((f) => ({ ...f, domain: val }))} className={`shrink-0 h-9 px-4 rounded-full text-sm font-medium border transition ${draftFilters.domain === val ? 'bg-emerald-600 text-white border-emerald-600' : (dark ? 'border-slate-700 text-slate-300 hover:border-slate-600' : 'border-slate-200 text-slate-600 hover:border-slate-300')}`}>{label}</button>
+                      ))}
+                    </div>
                   </div>
-                </div>
-                <div className="mt-3">
-                  <div className={`text-[11px] uppercase tracking-wide font-semibold mb-1.5 ${dark ? 'text-slate-500' : 'text-slate-400'}`}>Experience level</div>
-                  <div className="flex flex-wrap gap-2">
-                    {[['all', 'All levels'], ['fresher', 'Freshers'], ['experienced', 'Experienced']].map(([val, label]) => (
-                      <button key={val} onClick={() => setDraftFilters((f) => ({ ...f, level: val }))} className={`h-9 px-4 rounded-full text-sm font-medium border transition ${draftFilters.level === val ? 'bg-emerald-600 text-white border-emerald-600' : (dark ? 'border-slate-700 text-slate-300 hover:border-slate-600' : 'border-slate-200 text-slate-600 hover:border-slate-300')}`}>{label}</button>
-                    ))}
+                  <div className={`rounded-xl border p-3 ${dark ? 'border-slate-800 bg-slate-800/30' : 'border-slate-100 bg-slate-50'}`}>
+                    <div className={`text-[11px] uppercase tracking-wide font-semibold mb-2 ${dark ? 'text-slate-500' : 'text-slate-400'}`}>Experience level</div>
+                    <div className="no-scrollbar flex gap-2 overflow-x-auto pb-1">
+                      {[['all', 'All levels'], ['fresher', 'Freshers'], ['experienced', 'Experienced']].map(([val, label]) => (
+                        <button key={val} onClick={() => setDraftFilters((f) => ({ ...f, level: val }))} className={`shrink-0 h-9 px-4 rounded-full text-sm font-medium border transition ${draftFilters.level === val ? 'bg-emerald-600 text-white border-emerald-600' : (dark ? 'border-slate-700 text-slate-300 hover:border-slate-600' : 'border-slate-200 text-slate-600 hover:border-slate-300')}`}>{label}</button>
+                      ))}
+                    </div>
                   </div>
                 </div>
               </div>
-
-              {COMPANIES.length > 0 && (
-                <div className="flex items-center gap-2 mt-4 overflow-x-auto pb-1">
-                  <span className={`text-xs shrink-0 font-semibold uppercase tracking-wide ${dark ? 'text-slate-500' : 'text-slate-400'}`}>Tracking:</span>
-                  {COMPANIES.map((c) => (
-                    <span key={c} className={`shrink-0 text-xs px-2.5 py-1 rounded-full border ${dark ? 'border-slate-800 text-slate-500 bg-slate-900' : 'border-slate-200 text-slate-500 bg-white'}`}>{c}</span>
-                  ))}
-                </div>
-              )}
             </section>
 
             {jobsLoading ? (
@@ -740,14 +731,6 @@ export default function App() {
               </div>
             ) : (
               <>
-                <section className="mb-8">
-                  <div className="flex items-center gap-2 mb-3">
-                    <h2 className={`font-display font-bold text-lg ${dark ? 'text-slate-100' : 'text-slate-900'}`}>Latest openings</h2>
-                    <span className={`text-xs ${dark ? 'text-slate-500' : 'text-slate-400'}`}>swipe or use the arrows →</span>
-                  </div>
-                  <Carousel dark={dark} items={newestFirst.slice(0, 10)} renderItem={(job) => <JobCard {...jobCardProps(job, false)} />} />
-                </section>
-
                 {recommended.length > 0 && (
                   <section className="mb-8">
                     <div className="flex items-center gap-2 mb-3 flex-wrap">
