@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
-import { Search, MapPin, Bookmark, LogOut, X, Menu, ExternalLink, Sparkles, ShieldCheck, Leaf, Sun, Moon, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Search, MapPin, Bookmark, LogOut, X, Menu, ExternalLink, Sparkles, ShieldCheck, Leaf, Sun, Moon, ChevronLeft, ChevronRight, Plus } from 'lucide-react';
 import { supabase } from './supabaseClient';
 
 function initials(name) {
@@ -252,7 +252,7 @@ function JobDetailModal({ job, saved, onToggleSave, onClose, currentUser, onRequ
   );
 }
 
-function AuthModal({ mode, onClose, onSwitch, onSignup, onLogin, error, onOpenTC, dark }) {
+function AuthModal({ mode, onClose, onSwitch, onSignup, onLogin, onGoogle, error, onOpenTC, dark }) {
   const [form, setForm] = useState({ name: '', email: '', phone: '', address: '', password: '', confirm: '', agree: false });
   const [loginForm, setLoginForm] = useState({ email: '', password: '' });
   const [busy, setBusy] = useState(false);
@@ -286,6 +286,19 @@ function AuthModal({ mode, onClose, onSwitch, onSignup, onLogin, error, onOpenTC
         <p className={`text-sm mb-5 ${dark ? 'text-slate-400' : 'text-slate-500'}`}>{isSignup ? "Free to join — you'll need an account to apply to any role." : 'Welcome back — pick up your saved roles and matches.'}</p>
 
         {error && <div className={`mb-4 text-sm rounded-lg px-3 py-2 border ${dark ? 'text-red-300 bg-red-500/10 border-red-900' : 'text-red-700 bg-red-50 border-red-200'}`}>{error}</div>}
+
+        <button
+          type="button"
+          onClick={onGoogle}
+          className={`w-full h-11 rounded-lg border font-semibold text-sm flex items-center justify-center gap-2 mb-4 transition ${dark ? 'border-slate-700 text-slate-200 hover:border-slate-600' : 'border-slate-300 text-slate-700 hover:border-slate-400'}`}
+        >
+          <GoogleMark /> Continue with Google
+        </button>
+        <div className={`flex items-center gap-3 mb-4 text-xs ${dark ? 'text-slate-500' : 'text-slate-400'}`}>
+          <div className={`flex-1 h-px ${dark ? 'bg-slate-800' : 'bg-slate-200'}`} />
+          <span>or use your email</span>
+          <div className={`flex-1 h-px ${dark ? 'bg-slate-800' : 'bg-slate-200'}`} />
+        </div>
 
         {isSignup ? (
           <form className="space-y-3" onSubmit={submitSignup}>
@@ -350,6 +363,98 @@ function TCModal({ onClose, dark }) {
   );
 }
 
+function SkillsInput({ skills, onChange, dark }) {
+  const [draft, setDraft] = useState('');
+
+  const addSkill = () => {
+    const val = draft.trim();
+    if (!val) return;
+    if (skills.some((s) => s.toLowerCase() === val.toLowerCase())) { setDraft(''); return; }
+    onChange([...skills, val]);
+    setDraft('');
+  };
+  const removeSkill = (val) => onChange(skills.filter((s) => s !== val));
+
+  return (
+    <div>
+      <div className="flex flex-wrap gap-1.5 mb-3 min-h-[28px]">
+        {skills.length === 0 && <span className={`text-xs ${dark ? 'text-slate-500' : 'text-slate-400'}`}>No skills added yet — add a few below.</span>}
+        {skills.map((s) => (
+          <span key={s} className={`flex items-center gap-1.5 text-xs font-medium pl-2.5 pr-1.5 py-1 rounded-full border ${dark ? 'bg-emerald-500/10 text-emerald-400 border-emerald-800' : 'bg-emerald-50 text-emerald-700 border-emerald-200'}`}>
+            {s}
+            <button type="button" onClick={() => removeSkill(s)} aria-label={`Remove ${s}`} className="hover:opacity-70">
+              <X size={12} />
+            </button>
+          </span>
+        ))}
+      </div>
+      <div className="flex gap-2">
+        <input
+          value={draft}
+          onChange={(e) => setDraft(e.target.value)}
+          onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addSkill(); } }}
+          placeholder="e.g. Java — press Enter or tap Add"
+          className={inputCls(dark)}
+        />
+        <button type="button" onClick={addSkill} className="h-10 px-4 rounded-lg bg-emerald-600 text-white text-sm font-semibold hover:bg-emerald-700 flex items-center gap-1 shrink-0">
+          <Plus size={14} /> Add
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function GoogleMark() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 48 48" aria-hidden="true">
+      <path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9 3.6l6.7-6.7C35.9 2.4 30.3 0 24 0 14.6 0 6.4 5.4 2.5 13.2l7.8 6.1C12.3 13.3 17.6 9.5 24 9.5z" />
+      <path fill="#4285F4" d="M46.5 24.5c0-1.6-.1-3.1-.4-4.5H24v9h12.7c-.6 3-2.3 5.5-4.9 7.2l7.5 5.9c4.4-4 6.9-10 6.9-17.6z" />
+      <path fill="#FBBC05" d="M10.3 19.3a14.5 14.5 0 0 0 0 9.4l-7.8 6.1a24 24 0 0 1 0-21.6z" />
+      <path fill="#34A853" d="M24 48c6.3 0 11.6-2.1 15.5-5.6l-7.5-5.9c-2.1 1.4-4.8 2.3-8 2.3-6.4 0-11.7-3.8-13.7-9.6l-7.8 6.1C6.4 42.6 14.6 48 24 48z" />
+    </svg>
+  );
+}
+
+function CompleteProfileModal({ onSubmit, onOpenTC, dark }) {
+  const [phone, setPhone] = useState('');
+  const [address, setAddress] = useState('');
+  const [agree, setAgree] = useState(false);
+  const [error, setError] = useState('');
+  const [busy, setBusy] = useState(false);
+
+  const submit = async (e) => {
+    e.preventDefault();
+    const cleanPhone = phone.trim();
+    const cleanAddress = address.trim();
+    if (!/^(\+91[-\s]?)?[6-9]\d{9}$/.test(cleanPhone.replace(/\s+/g, ''))) return setError('Enter a valid 10-digit Indian mobile number.');
+    if (!cleanAddress) return setError('Please add your address.');
+    if (!agree) return setError('Please accept the Terms & Conditions to continue.');
+    setError('');
+    setBusy(true);
+    await onSubmit(cleanPhone, cleanAddress);
+    setBusy(false);
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/70 backdrop-blur-sm">
+      <div className={`w-full max-w-md border rounded-2xl shadow-xl p-6 ${dark ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'}`}>
+        <h2 className={`font-display text-xl font-bold mb-1 ${dark ? 'text-slate-50' : 'text-slate-900'}`}>Just one more thing</h2>
+        <p className={`text-sm mb-4 ${dark ? 'text-slate-400' : 'text-slate-500'}`}>You signed in with Google, which doesn't share a phone number or address with us — we still need those to finish setting up your account.</p>
+        {error && <div className={`mb-4 text-sm rounded-lg px-3 py-2 border ${dark ? 'text-red-300 bg-red-500/10 border-red-900' : 'text-red-700 bg-red-50 border-red-200'}`}>{error}</div>}
+        <form className="space-y-3" onSubmit={submit}>
+          <Field label="Mobile number" dark={dark}><input value={phone} onChange={(e) => setPhone(e.target.value)} className={inputCls(dark)} placeholder="98765 43210" /></Field>
+          <Field label="Address" dark={dark}><textarea value={address} onChange={(e) => setAddress(e.target.value)} rows={2} className={inputCls(dark) + ' resize-none'} placeholder="City, State" /></Field>
+          <label className={`flex items-start gap-2 text-xs pt-1 ${dark ? 'text-slate-400' : 'text-slate-500'}`}>
+            <input type="checkbox" checked={agree} onChange={(e) => setAgree(e.target.checked)} className="mt-0.5" />
+            <span>I agree to the <button type="button" onClick={onOpenTC} className={dark ? 'text-emerald-400 underline underline-offset-2' : 'text-emerald-700 underline underline-offset-2'}>Terms & Conditions</button>, including storage of my email, phone number and address.</span>
+          </label>
+          <button type="submit" disabled={busy} className="w-full h-11 rounded-lg bg-emerald-600 text-white font-semibold hover:bg-emerald-700 transition disabled:opacity-60">{busy ? 'Saving…' : 'Save and continue'}</button>
+        </form>
+      </div>
+    </div>
+  );
+}
+
 function Toast({ message }) {
   if (!message) return null;
   return (
@@ -376,7 +481,6 @@ export default function App() {
   const [mobileNav, setMobileNav] = useState(false);
   const [toast, setToast] = useState(null);
   const [openJobId, setOpenJobId] = useState(null);
-  const [skillsDraft, setSkillsDraft] = useState('');
   const [draftFilters, setDraftFilters] = useState({ level: 'all', domain: 'all', q: '', loc: 'All Locations', cat: 'All Categories' });
   const [filters, setFilters] = useState({ level: 'all', domain: 'all', q: '', loc: 'All Locations', cat: 'All Categories' });
   const applyFilters = () => setFilters(draftFilters);
@@ -448,24 +552,28 @@ export default function App() {
   const currentUser = useMemo(() => {
     if (!session) return null;
     const meta = session.user.user_metadata || {};
+    let skillsArr = meta.skills;
+    if (!Array.isArray(skillsArr)) {
+      skillsArr = typeof skillsArr === 'string' && skillsArr.trim()
+        ? skillsArr.split(/[,\n]/).map((s) => s.trim()).filter(Boolean)
+        : [];
+    }
     return {
       id: session.user.id,
-      email: session.user.email,
-      name: meta.name || session.user.email.split('@')[0],
+      email: session.user.email || '',
+      name: meta.name || (session.user.email ? session.user.email.split('@')[0] : 'there'),
       phone: meta.phone || '',
       address: meta.address || '',
-      skills: meta.skills || '',
+      skills: skillsArr,
       savedJobIds: meta.saved_job_ids || [],
     };
   }, [session]);
 
+  const needsProfileCompletion = !!currentUser && !currentUser.phone;
+
   useEffect(() => {
     if (!currentUser && (page === 'saved' || page === 'profile')) setPage('home');
   }, [currentUser, page]);
-
-  useEffect(() => {
-    setSkillsDraft(currentUser ? currentUser.skills : '');
-  }, [currentUser && currentUser.id]);
 
   const requestAuth = () => { setAuthError(''); setAuthModal('signup'); };
 
@@ -493,7 +601,7 @@ export default function App() {
     const { error } = await supabase.auth.signUp({
       email,
       password,
-      options: { data: { name, phone, address, skills: '', saved_job_ids: [] } },
+      options: { data: { name, phone, address, skills: [], saved_job_ids: [] } },
     });
     if (error) return setAuthError(error.message);
 
@@ -509,6 +617,25 @@ export default function App() {
     setAuthError('');
     setAuthModal(null);
     showToast('Welcome back!');
+  };
+
+  const signInWithGoogle = async () => {
+    setAuthError('');
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: { redirectTo: window.location.origin },
+    });
+    if (error) setAuthError(error.message);
+  };
+
+  const completeProfile = async (phone, address) => {
+    const meta = session.user.user_metadata || {};
+    const { data, error } = await supabase.auth.updateUser({
+      data: { ...meta, phone, address, name: meta.name || (session.user.email || '').split('@')[0] },
+    });
+    if (error) { showToast('Could not save — try again.'); return; }
+    setSession((prev) => (prev ? { ...prev, user: data.user } : prev));
+    showToast('Thanks — your profile is complete.');
   };
 
   const handleLogout = async () => {
@@ -527,9 +654,9 @@ export default function App() {
     showToast(has ? 'Removed from saved roles.' : 'Saved to your list.');
   };
 
-  const updateSkills = async (text) => {
+  const updateSkills = async (skillsArray) => {
     if (!currentUser) return;
-    const { data, error } = await supabase.auth.updateUser({ data: { ...session.user.user_metadata, skills: text } });
+    const { data, error } = await supabase.auth.updateUser({ data: { ...session.user.user_metadata, skills: skillsArray } });
     if (error) { console.error('updateSkills failed:', error.message); showToast('Could not update — try again.'); return; }
     setSession((prev) => (prev ? { ...prev, user: data.user } : prev));
     showToast('Preferences updated — recommendations refreshed.');
@@ -580,8 +707,8 @@ export default function App() {
   }, [filters, jobs]);
 
   const recommended = useMemo(() => {
-    if (!currentUser || !currentUser.skills || !currentUser.skills.trim()) return [];
-    const tokens = currentUser.skills.toLowerCase().split(/[,\n]/).map((s) => s.trim()).filter((s) => s.length > 1);
+    if (!currentUser || !currentUser.skills || currentUser.skills.length === 0) return [];
+    const tokens = currentUser.skills.map((s) => s.toLowerCase().trim()).filter((s) => s.length > 1);
     if (!tokens.length) return [];
     const scored = jobs.map((job) => ({ job, score: matchScore(job, tokens) })).filter((x) => x.score > 0);
     scored.sort((a, b) => b.score - a.score || a.job.daysAgo - b.job.daysAgo);
@@ -822,9 +949,8 @@ export default function App() {
 
             <div className={`border rounded-2xl p-5 mb-6 shadow-sm ${dark ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'}`}>
               <h2 className={`font-semibold text-sm mb-1 ${dark ? 'text-slate-200' : 'text-slate-800'}`}>Skills & interests</h2>
-              <p className={`text-xs mb-3 ${dark ? 'text-slate-500' : 'text-slate-400'}`}>Add a few comma-separated skills or the kind of role you want — we use this to sort "Matched for you" on Home.</p>
-              <textarea value={skillsDraft} onChange={(e) => setSkillsDraft(e.target.value)} rows={3} placeholder="e.g. java, sql, customer support, banking, fresher" className={inputCls(dark) + ' py-2.5 resize-none'} />
-              <button onClick={() => updateSkills(skillsDraft)} className="mt-3 h-10 px-4 rounded-lg bg-emerald-600 text-white text-sm font-semibold hover:bg-emerald-700">Save preferences</button>
+              <p className={`text-xs mb-3 ${dark ? 'text-slate-500' : 'text-slate-400'}`}>Add each skill one at a time — we use these to sort "Matched for you" on Home. Changes save automatically.</p>
+              <SkillsInput skills={currentUser.skills} onChange={updateSkills} dark={dark} />
             </div>
 
             <div className={`border rounded-2xl p-5 ${dark ? 'border-red-900/50 bg-red-500/5' : 'border-red-200 bg-red-50'}`}>
@@ -864,10 +990,14 @@ export default function App() {
         onSwitch={() => { setAuthError(''); setAuthModal((m) => (m === 'signup' ? 'login' : 'signup')); }}
         onSignup={handleSignup}
         onLogin={handleLogin}
+        onGoogle={signInWithGoogle}
         error={authError}
         onOpenTC={() => setShowTC(true)}
         dark={dark}
       />
+      {needsProfileCompletion && (
+        <CompleteProfileModal onSubmit={completeProfile} onOpenTC={() => setShowTC(true)} dark={dark} />
+      )}
       {showTC && <TCModal onClose={() => setShowTC(false)} dark={dark} />}
       <Toast message={toast} />
     </div>
