@@ -671,8 +671,9 @@ export default function App() {
       });
       const json = await res.json().catch(() => ({}));
       if (!res.ok) {
-        console.error('deleteAccount failed:', json.error || res.status);
-        showToast(json.error || 'Could not delete your account — try again.');
+        console.error('deleteAccount failed:', json.error || res.status, json.debug || '');
+        const debugText = json.debug ? ` [hasUrl: ${json.debug.hasUrl}, hasServiceKey: ${json.debug.hasServiceKey}]` : '';
+        showToast((json.error || 'Could not delete your account — try again.') + debugText);
         return;
       }
       await supabase.auth.signOut();
