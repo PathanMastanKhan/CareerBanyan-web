@@ -17,15 +17,21 @@ export default async function handler(req, res) {
   const serviceKey = process.env.SUPABASE_SERVICE_KEY;
   if (!supabaseUrl || !serviceKey) {
     console.error('Server missing VITE_SUPABASE_URL or SUPABASE_SERVICE_KEY');
-    return res.status(500).json({ error: 'Server is not configured correctly.' });
+    return res.status(500).json({
+      error: 'Server is not configured correctly.',
+      debug: {
+        hasUrl: !!supabaseUrl,
+        hasServiceKey: !!serviceKey,
+        urlLength: supabaseUrl ? supabaseUrl.length : 0,
+        keyLength: serviceKey ? serviceKey.length : 0,
+      },
+    });
   }
 
   const adminClient = createClient(supabaseUrl, serviceKey, {
     auth: { autoRefreshToken: false, persistSession: false },
   });
 
-  // Verify the token actually belongs to a real, currently signed-in user —
-  // this stops anyone from deleting an account that isn't theirs.
   const { data: userData, error: userError } = await adminClient.auth.getUser(token);
   if (userError || !userData || !userData.user) {
     return res.status(401).json({ error: 'Your session is invalid or expired — please log in again.' });
