@@ -32,6 +32,8 @@ export default async function handler(req, res) {
     auth: { autoRefreshToken: false, persistSession: false },
   });
 
+  // Verify the token actually belongs to a real, currently signed-in user —
+  // this stops anyone from deleting an account that isn't theirs.
   const { data: userData, error: userError } = await adminClient.auth.getUser(token);
   if (userError || !userData || !userData.user) {
     return res.status(401).json({ error: 'Your session is invalid or expired — please log in again.' });

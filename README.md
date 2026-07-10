@@ -40,12 +40,13 @@ This needs its own repository — don't put it inside your existing `CareerBanya
 1. Go to **vercel.com** → sign up using your GitHub account (this makes Step 4 automatic).
 2. Click **Add New...** → **Project**.
 3. Find `careerbanyan-web` in the list and click **Import**.
-4. Before clicking Deploy, click to expand **Environment Variables** and add these two, one at a time:
+4. Before clicking Deploy, click to expand **Environment Variables** and add these **three**, one at a time:
 
    | Name | Value |
    |---|---|
    | `VITE_SUPABASE_URL` | The same Project URL you found earlier for the sync project (`https://xxxxx.supabase.co`) |
-   | `VITE_SUPABASE_ANON_KEY` | The **anon** / **public** (or **publishable**) key you copied earlier — NOT the secret/service_role one |
+   | `VITE_SUPABASE_ANON_KEY` | The **anon** / **public** (or **publishable**) key you copied earlier — NOT the secret one |
+   | `SUPABASE_SERVICE_KEY` | The **service_role** / **secret** key you copied earlier — this one powers real account deletion, and Vercel keeps it server-side only (never sent to visitors' browsers) |
 
 5. Click **Deploy**. Wait about a minute.
 6. When it's done, click the link Vercel gives you — that's your live website's address.
@@ -70,5 +71,5 @@ If the page loads but shows "No roles yet," that means the `job-sync` project ha
 
 ## What's intentionally not built yet
 
-- **Self-service account deletion.** Deleting a user account safely needs a small server-side step (it can't be done directly from the browser without exposing a powerful key). For now, the Profile page just shows a request message — real deletions would need to be done manually by you in the Supabase dashboard (Authentication → Users → find the person → delete), or I can build the automated version later if you want it.
 - **A real domain name** (like `careerbanyan.com`) — you're live on a free `vercel.app` address for now. Buying and connecting a real domain is a separate, small step whenever you're ready.
+- **Showing up in Google search results.** Being online and being *findable on Google* are two different things — see the note your developer/assistant gave you separately on this.
