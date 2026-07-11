@@ -16,6 +16,33 @@
     @media (prefers-reduced-motion: reduce){ .fade-in{ animation:none; } }
     .no-scrollbar::-webkit-scrollbar{ display:none; }
     .no-scrollbar{ scrollbar-width:none; }
+
+    /* ---- Hero "orbit" signature visual ---- */
+    .orbit-floor{
+      background-image: radial-gradient(currentColor 1px, transparent 1px);
+      background-size: 22px 22px;
+    }
+    .orbit-scene{ perspective: 1200px; }
+    .orbit-tilt{ transform: rotateX(52deg) rotateZ(0deg); transform-style: preserve-3d; }
+    @keyframes orbitSpin { from{ transform: rotateZ(0deg); } to{ transform: rotateZ(360deg); } }
+    @keyframes orbitSpinReverse { from{ transform: rotateZ(360deg); } to{ transform: rotateZ(0deg); } }
+    .orbit-ring{ animation: orbitSpin 22s linear infinite; }
+    .orbit-icon-counter{ animation: orbitSpinReverse 22s linear infinite; }
+    @keyframes hubPulse {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(16,185,129,0.35), 0 0 40px 6px rgba(16,185,129,0.25); }
+      50% { box-shadow: 0 0 0 10px rgba(16,185,129,0), 0 0 55px 12px rgba(16,185,129,0.35); }
+    }
+    .hub-pulse{ animation: hubPulse 3.2s ease-in-out infinite; }
+    @keyframes floatCard {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-10px); }
+    }
+    .float-card{ animation: floatCard 4.5s ease-in-out infinite; }
+    .float-card-delay{ animation-delay: 1.6s; }
+
+    @media (prefers-reduced-motion: reduce){
+      .orbit-ring, .orbit-icon-counter, .hub-pulse, .float-card{ animation: none; }
+    }
   </style>
 </head>
 <body>
