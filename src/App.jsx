@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
-import { Search, MapPin, Bookmark, LogOut, X, Menu, ExternalLink, Sparkles, ShieldCheck, Leaf, Sun, Moon, ChevronLeft, ChevronRight, Plus } from 'lucide-react';
+import { Search, MapPin, Bookmark, LogOut, X, Menu, ExternalLink, Sparkles, ShieldCheck, Leaf, Sun, Moon, ChevronLeft, ChevronRight, Plus, Code2, Cpu, Wrench, Building2, FlaskConical, Briefcase, BadgeCheck, Bell } from 'lucide-react';
 import { supabase } from './supabaseClient';
 
 function initials(name) {
@@ -117,6 +117,77 @@ function useTilt() {
   };
 
   return { ref, tiltStyle, onMouseMove, onMouseLeave };
+}
+
+function JobOrbit({ dark }) {
+  // The brand's own mark (a leaf — the "banyan tree") sits at the centre,
+  // with the major hiring branches orbiting it like limbs of the tree, and
+  // two live-status cards echoing that roles are syncing in continuously.
+  const branches = [
+    { Icon: Code2, label: 'CSE / IT' },
+    { Icon: Cpu, label: 'ECE' },
+    { Icon: Wrench, label: 'Mechanical' },
+    { Icon: Building2, label: 'Civil' },
+    { Icon: FlaskConical, label: 'Chemical' },
+    { Icon: Briefcase, label: 'Non-IT' },
+  ];
+  const radius = 92;
+
+  return (
+    <div
+      aria-hidden="true"
+      className="orbit-scene relative hidden md:flex items-center justify-center shrink-0 mx-auto lg:mx-0"
+      style={{ width: 260, height: 220 }}
+    >
+      <div
+        className={`orbit-floor absolute rounded-full ${dark ? 'text-slate-800' : 'text-slate-200'}`}
+        style={{ width: 260, height: 260, opacity: 0.7 }}
+      />
+
+      <div className="orbit-tilt relative" style={{ width: 200, height: 200 }}>
+        <div className="orbit-ring absolute inset-0">
+          {branches.map(({ Icon, label }, i) => {
+            const angle = (360 / branches.length) * i;
+            return (
+              <div key={label} className="absolute inset-0" style={{ transform: `rotate(${angle}deg)` }}>
+                <div className="absolute left-1/2 top-0" style={{ transform: `translate(-50%, -${radius}px)` }}>
+                  <div style={{ transform: `rotate(${-angle}deg)` }}>
+                    <div className="orbit-icon-counter">
+                      <div
+                        title={label}
+                        className={`h-11 w-11 rounded-xl border shadow-md flex items-center justify-center ${dark ? 'bg-slate-900 border-slate-700 text-emerald-400' : 'bg-white border-slate-200 text-emerald-600'}`}
+                      >
+                        <Icon size={19} />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        <div className="absolute inset-0 flex items-center justify-center">
+          <div
+            className={`hub-pulse h-16 w-16 rounded-full flex items-center justify-center ring-4 ${dark ? 'bg-gradient-to-br from-emerald-500 to-emerald-700 ring-slate-950' : 'bg-gradient-to-br from-emerald-400 to-emerald-600 ring-white'}`}
+          >
+            <Leaf size={26} className="text-white" />
+          </div>
+        </div>
+      </div>
+
+      <div
+        className={`float-card absolute top-1 left-0 rounded-xl border shadow-lg px-3 py-1.5 text-[11px] font-semibold flex items-center gap-1.5 ${dark ? 'bg-slate-900 border-slate-700 text-emerald-400' : 'bg-white border-slate-200 text-emerald-700'}`}
+      >
+        <BadgeCheck size={13} /> Applied · Infosys
+      </div>
+      <div
+        className={`float-card float-card-delay absolute bottom-2 right-0 rounded-xl border shadow-lg px-3 py-1.5 text-[11px] font-semibold flex items-center gap-1.5 ${dark ? 'bg-slate-900 border-slate-700 text-amber-400' : 'bg-white border-slate-200 text-amber-700'}`}
+      >
+        <Bell size={13} /> New role synced
+      </div>
+    </div>
+  );
 }
 
 function JobCard({ job, saved, onToggleSave, onOpen, currentUser, onRequestAuth, highlight, dark }) {
@@ -842,6 +913,7 @@ export default function App() {
                   <h1 className={`font-display text-3xl sm:text-4xl font-extrabold leading-tight max-w-xl ${dark ? 'text-slate-50' : 'text-slate-900'}`}>New roles land here first. Yours could be next.</h1>
                   <p className={`mt-2 max-w-lg text-sm sm:text-base ${dark ? 'text-slate-400' : 'text-slate-600'}`}>Freshers to veterans, IT to everything else — filter it your way, then jump straight to the company's own site and apply. Always free.</p>
                 </div>
+                <JobOrbit dark={dark} />
                 <div className="flex gap-3 overflow-x-auto pb-1 lg:pb-0">
                   <StatTile value={jobs.length} label="Live roles" dark={dark} />
                   <StatTile value={jobs.filter((j) => j.daysAgo === 0).length} label="New today" dark={dark} />
