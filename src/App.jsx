@@ -395,12 +395,12 @@ function JobDetailModal({ job, saved, onToggleSave, onClose, currentUser, onRequ
 }
 
 function AuthModal({ mode, onClose, onSwitch, onSignup, onLogin, onGoogle, error, onOpenTC, dark }) {
-  const [form, setForm] = useState({ name: '', email: '', phone: '', address: '', password: '', confirm: '', agree: false });
+  const [form, setForm] = useState({ name: '', email: '', password: '', confirm: '', agree: false });
   const [loginForm, setLoginForm] = useState({ email: '', password: '' });
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
-    setForm({ name: '', email: '', phone: '', address: '', password: '', confirm: '', agree: false });
+    setForm({ name: '', email: '', password: '', confirm: '', agree: false });
     setLoginForm({ email: '', password: '' });
     setBusy(false);
   }, [mode]);
@@ -446,10 +446,9 @@ function AuthModal({ mode, onClose, onSwitch, onSignup, onLogin, onGoogle, error
           <form className="space-y-3" onSubmit={submitSignup}>
             <Field label="Full name" dark={dark}><input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className={inputCls(dark)} placeholder="Priya Sharma" /></Field>
             <Field label="Email" dark={dark}><input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} className={inputCls(dark)} placeholder="priya@example.com" /></Field>
-            <Field label="Mobile number" dark={dark}><input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} className={inputCls(dark)} placeholder="98765 43210" /></Field>
-            <Field label="Address" dark={dark}><textarea value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} className={inputCls(dark) + ' resize-none'} rows={2} placeholder="City, State" /></Field>
             <Field label="Password" dark={dark}><input type="password" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} className={inputCls(dark)} placeholder="At least 6 characters" /></Field>
             <Field label="Confirm password" dark={dark}><input type="password" value={form.confirm} onChange={(e) => setForm({ ...form, confirm: e.target.value })} className={inputCls(dark)} placeholder="Re-enter password" /></Field>
+            <p className={`text-xs ${dark ? 'text-slate-500' : 'text-slate-400'}`}>We'll verify your mobile number by SMS right after this step.</p>
             <label className={`flex items-start gap-2 text-xs pt-1 ${dark ? 'text-slate-400' : 'text-slate-500'}`}>
               <input type="checkbox" checked={form.agree} onChange={(e) => setForm({ ...form, agree: e.target.checked })} className="mt-0.5" />
               <span>I agree to the <button type="button" onClick={onOpenTC} className={dark ? 'text-emerald-400 underline underline-offset-2' : 'text-emerald-700 underline underline-offset-2'}>Terms & Conditions</button>, including storage of my email, phone number and address.</span>
@@ -557,41 +556,102 @@ function GoogleMark() {
   );
 }
 
-function CompleteProfileModal({ onSubmit, onOpenTC, dark }) {
-  const [phone, setPhone] = useState('');
-  const [address, setAddress] = useState('');
+function CompleteProfileModal({ initialPhone, initialAddress, onSendOtp, onVerifyOtp, onOpenTC, dark }) {
+  const [step, setStep] = useState('phone'); // 'phone' | 'otp'
+  const [phone, setPhone] = useState(initialPhone || '');
+  const [address, setAddress] = useState(initialAddress || '');
   const [agree, setAgree] = useState(false);
+  const [code, setCode] = useState('');
+  const [e164, setE164] = useState('');
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
+  const [cooldown, setCooldown] = useState(0);
 
-  const submit = async (e) => {
+  useEffect(() => {
+    if (cooldown <= 0) return;
+    const t = window.setTimeout(() => setCooldown((c) => c - 1), 1000);
+    return () => window.clearTimeout(t);
+  }, [cooldown]);
+
+  const submitPhone = async (e) => {
     e.preventDefault();
-    const cleanPhone = phone.trim();
     const cleanAddress = address.trim();
-    if (!/^(\+91[-\s]?)?[6-9]\d{9}$/.test(cleanPhone.replace(/\s+/g, ''))) return setError('Enter a valid 10-digit Indian mobile number.');
     if (!cleanAddress) return setError('Please add your address.');
     if (!agree) return setError('Please accept the Terms & Conditions to continue.');
     setError('');
     setBusy(true);
-    await onSubmit(cleanPhone, cleanAddress);
+    const res = await onSendOtp(phone);
     setBusy(false);
+    if (!res.ok) return setError(res.message);
+    setE164(res.e164);
+    setCode('');
+    setCooldown(30);
+    setStep('otp');
+  };
+
+  const resend = async () => {
+    if (cooldown > 0 || busy) return;
+    setError('');
+    setBusy(true);
+    const res = await onSendOtp(phone);
+    setBusy(false);
+    if (!res.ok) return setError(res.message);
+    setCooldown(30);
+  };
+
+  const submitOtp = async (e) => {
+    e.preventDefault();
+    if (!/^\d{4,8}$/.test(code.trim())) return setError('Enter the code exactly as you received it.');
+    setError('');
+    setBusy(true);
+    const res = await onVerifyOtp(e164, code, address);
+    setBusy(false);
+    if (!res.ok) return setError(res.message);
   };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/70 backdrop-blur-sm">
       <div className={`modal-pop-3d w-full max-w-md border rounded-2xl shadow-[0_40px_80px_-20px_rgba(0,0,0,0.5)] p-6 ${dark ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'}`}>
-        <h2 className={`font-display text-xl font-bold mb-1 ${dark ? 'text-slate-50' : 'text-slate-900'}`}>Just one more thing</h2>
-        <p className={`text-sm mb-4 ${dark ? 'text-slate-400' : 'text-slate-500'}`}>You signed in with Google, which doesn't share a phone number or address with us — we still need those to finish setting up your account.</p>
-        {error && <div className={`mb-4 text-sm rounded-lg px-3 py-2 border ${dark ? 'text-red-300 bg-red-500/10 border-red-900' : 'text-red-700 bg-red-50 border-red-200'}`}>{error}</div>}
-        <form className="space-y-3" onSubmit={submit}>
-          <Field label="Mobile number" dark={dark}><input value={phone} onChange={(e) => setPhone(e.target.value)} className={inputCls(dark)} placeholder="98765 43210" /></Field>
-          <Field label="Address" dark={dark}><textarea value={address} onChange={(e) => setAddress(e.target.value)} rows={2} className={inputCls(dark) + ' resize-none'} placeholder="City, State" /></Field>
-          <label className={`flex items-start gap-2 text-xs pt-1 ${dark ? 'text-slate-400' : 'text-slate-500'}`}>
-            <input type="checkbox" checked={agree} onChange={(e) => setAgree(e.target.checked)} className="mt-0.5" />
-            <span>I agree to the <button type="button" onClick={onOpenTC} className={dark ? 'text-emerald-400 underline underline-offset-2' : 'text-emerald-700 underline underline-offset-2'}>Terms & Conditions</button>, including storage of my email, phone number and address.</span>
-          </label>
-          <button type="submit" disabled={busy} className={`w-full h-11 rounded-lg bg-emerald-600 text-white font-semibold hover:bg-emerald-700 disabled:opacity-60 disabled:translate-y-0 disabled:shadow-none ${btn3D(dark)}`}>{busy ? 'Saving…' : 'Save and continue'}</button>
-        </form>
+        {step === 'phone' ? (
+          <>
+            <h2 className={`font-display text-xl font-bold mb-1 ${dark ? 'text-slate-50' : 'text-slate-900'}`}>Verify your mobile number</h2>
+            <p className={`text-sm mb-4 ${dark ? 'text-slate-400' : 'text-slate-500'}`}>We text a one-time code to confirm this number is really yours before it goes on your account.</p>
+            {error && <div className={`mb-4 text-sm rounded-lg px-3 py-2 border ${dark ? 'text-red-300 bg-red-500/10 border-red-900' : 'text-red-700 bg-red-50 border-red-200'}`}>{error}</div>}
+            <form className="space-y-3" onSubmit={submitPhone}>
+              <Field label="Mobile number" dark={dark}><input value={phone} onChange={(e) => setPhone(e.target.value)} className={inputCls(dark)} placeholder="98765 43210" /></Field>
+              <Field label="Address" dark={dark}><textarea value={address} onChange={(e) => setAddress(e.target.value)} rows={2} className={inputCls(dark) + ' resize-none'} placeholder="City, State" /></Field>
+              <label className={`flex items-start gap-2 text-xs pt-1 ${dark ? 'text-slate-400' : 'text-slate-500'}`}>
+                <input type="checkbox" checked={agree} onChange={(e) => setAgree(e.target.checked)} className="mt-0.5" />
+                <span>I agree to the <button type="button" onClick={onOpenTC} className={dark ? 'text-emerald-400 underline underline-offset-2' : 'text-emerald-700 underline underline-offset-2'}>Terms & Conditions</button>, including storage of my email, phone number and address.</span>
+              </label>
+              <button type="submit" disabled={busy} className={`w-full h-11 rounded-lg bg-emerald-600 text-white font-semibold hover:bg-emerald-700 disabled:opacity-60 disabled:translate-y-0 disabled:shadow-none ${btn3D(dark)}`}>{busy ? 'Sending code…' : 'Send verification code'}</button>
+            </form>
+          </>
+        ) : (
+          <>
+            <h2 className={`font-display text-xl font-bold mb-1 ${dark ? 'text-slate-50' : 'text-slate-900'}`}>Enter the code</h2>
+            <p className={`text-sm mb-4 ${dark ? 'text-slate-400' : 'text-slate-500'}`}>We sent a code by SMS to <strong className={dark ? 'text-slate-200' : 'text-slate-800'}>{e164}</strong>.</p>
+            {error && <div className={`mb-4 text-sm rounded-lg px-3 py-2 border ${dark ? 'text-red-300 bg-red-500/10 border-red-900' : 'text-red-700 bg-red-50 border-red-200'}`}>{error}</div>}
+            <form className="space-y-3" onSubmit={submitOtp}>
+              <Field label="Verification code" dark={dark}>
+                <input
+                  value={code}
+                  onChange={(e) => setCode(e.target.value.replace(/\D/g, ''))}
+                  inputMode="numeric"
+                  autoComplete="one-time-code"
+                  className={inputCls(dark) + ' tracking-[0.4em] text-center text-lg font-semibold'}
+                  placeholder="••••••"
+                  maxLength={8}
+                />
+              </Field>
+              <button type="submit" disabled={busy} className={`w-full h-11 rounded-lg bg-emerald-600 text-white font-semibold hover:bg-emerald-700 disabled:opacity-60 disabled:translate-y-0 disabled:shadow-none ${btn3D(dark)}`}>{busy ? 'Verifying…' : 'Verify & continue'}</button>
+              <div className="flex items-center justify-between text-xs pt-1">
+                <button type="button" onClick={() => { setStep('phone'); setError(''); }} className={dark ? 'text-slate-400 hover:text-slate-200' : 'text-slate-500 hover:text-slate-700'}>Change number</button>
+                <button type="button" onClick={resend} disabled={cooldown > 0 || busy} className={`disabled:opacity-50 ${dark ? 'text-emerald-400 hover:text-emerald-300' : 'text-emerald-700 hover:text-emerald-800'}`}>{cooldown > 0 ? `Resend code (${cooldown}s)` : 'Resend code'}</button>
+              </div>
+            </form>
+          </>
+        )}
       </div>
     </div>
   );
@@ -705,13 +765,17 @@ export default function App() {
       email: session.user.email || '',
       name: meta.name || (session.user.email ? session.user.email.split('@')[0] : 'there'),
       phone: meta.phone || '',
+      phoneVerified: !!meta.phone_verified,
       address: meta.address || '',
       skills: skillsArr,
       savedJobIds: meta.saved_job_ids || [],
     };
   }, [session]);
 
-  const needsProfileCompletion = !!currentUser && !currentUser.phone;
+  // A profile only counts as "complete" once the phone number has actually
+  // been OTP-verified — not just typed in. This also re-prompts anyone
+  // whose number was accepted before verification existed.
+  const needsProfileCompletion = !!currentUser && !currentUser.phoneVerified;
 
   useEffect(() => {
     if (!currentUser && (page === 'saved' || page === 'profile')) setPage('home');
@@ -729,13 +793,10 @@ export default function App() {
   const handleSignup = async (form) => {
     const name = form.name.trim();
     const email = form.email.trim().toLowerCase();
-    const phone = form.phone.trim();
-    const address = form.address.trim();
     const { password, confirm, agree } = form;
 
-    if (!name || !email || !phone || !address || !password) return setAuthError('Please fill in every field.');
+    if (!name || !email || !password) return setAuthError('Please fill in every field.');
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return setAuthError('Enter a valid email address.');
-    if (!/^(\+91[-\s]?)?[6-9]\d{9}$/.test(phone.replace(/\s+/g, ''))) return setAuthError('Enter a valid 10-digit Indian mobile number.');
     if (password.length < 6) return setAuthError('Password should be at least 6 characters.');
     if (password !== confirm) return setAuthError("Passwords don't match.");
     if (!agree) return setAuthError('Please accept the Terms & Conditions to continue.');
@@ -743,13 +804,13 @@ export default function App() {
     const { error } = await supabase.auth.signUp({
       email,
       password,
-      options: { data: { name, phone, address, skills: [], saved_job_ids: [] } },
+      options: { data: { name, skills: [], saved_job_ids: [] } },
     });
     if (error) return setAuthError(error.message);
 
     setAuthError('');
     setAuthModal(null);
-    showToast(`Welcome, ${name.split(' ')[0]}! Your account is ready.`);
+    showToast(`Welcome, ${name.split(' ')[0]}! Now let's verify your mobile number.`);
   };
 
   const handleLogin = async (form) => {
@@ -770,15 +831,44 @@ export default function App() {
     if (error) setAuthError(error.message);
   };
 
-  const completeProfile = async (phone, address) => {
+  // Converts a loosely-formatted Indian mobile number into the E.164 shape
+  // Supabase's phone-OTP API expects (+91XXXXXXXXXX).
+  const toE164 = (raw) => {
+    const digits = raw.replace(/\D/g, '').replace(/^91/, '');
+    return `+91${digits}`;
+  };
+
+  // Step 1: send the OTP. Requires Phone auth + an SMS provider (Twilio,
+  // MessageBird, Vonage, etc.) to be configured in the Supabase dashboard —
+  // this call will fail with a clear Supabase error message if that isn't
+  // set up yet.
+  const sendPhoneOtp = async (phone) => {
+    const cleanPhone = phone.trim();
+    if (!/^(\+91[-\s]?)?[6-9]\d{9}$/.test(cleanPhone.replace(/\s+/g, ''))) {
+      return { ok: false, message: 'Enter a valid 10-digit Indian mobile number.' };
+    }
+    const e164 = toE164(cleanPhone);
+    const { error } = await supabase.auth.updateUser({ phone: e164 });
+    if (error) return { ok: false, message: error.message };
+    return { ok: true, e164 };
+  };
+
+  // Step 2: confirm the code the user received, then persist the verified
+  // phone + address to profile metadata.
+  const verifyPhoneOtp = async (e164, code, address) => {
+    const { error: verifyError } = await supabase.auth.verifyOtp({ phone: e164, token: code.trim(), type: 'phone_change' });
+    if (verifyError) return { ok: false, message: 'That code is incorrect or expired — try again or resend it.' };
+
     const meta = session.user.user_metadata || {};
     const { data, error } = await supabase.auth.updateUser({
-      data: { ...meta, phone, address, name: meta.name || (session.user.email || '').split('@')[0] },
+      data: { ...meta, phone: e164, address: address.trim(), phone_verified: true, name: meta.name || (session.user.email || '').split('@')[0] },
     });
-    if (error) { showToast('Could not save — try again.'); return; }
+    if (error) return { ok: false, message: 'Verified, but saving your profile failed — try again.' };
     setSession((prev) => (prev ? { ...prev, user: data.user } : prev));
-    showToast('Thanks — your profile is complete.');
+    showToast('Mobile number verified — you\'re all set.');
+    return { ok: true };
   };
+
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -1143,7 +1233,14 @@ export default function App() {
         dark={dark}
       />
       {needsProfileCompletion && (
-        <CompleteProfileModal onSubmit={completeProfile} onOpenTC={() => setShowTC(true)} dark={dark} />
+        <CompleteProfileModal
+          initialPhone={currentUser.phone}
+          initialAddress={currentUser.address}
+          onSendOtp={sendPhoneOtp}
+          onVerifyOtp={verifyPhoneOtp}
+          onOpenTC={() => setShowTC(true)}
+          dark={dark}
+        />
       )}
       {showTC && <TCModal onClose={() => setShowTC(false)} dark={dark} />}
       <Toast message={toast} />
