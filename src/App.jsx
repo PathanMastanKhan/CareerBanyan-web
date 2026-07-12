@@ -26,6 +26,31 @@ function matchScore(job, tokens) {
 const inputCls = (dark) => `w-full h-10 px-3 rounded-lg border text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 ${dark ? 'bg-slate-900 border-slate-700 text-slate-50 placeholder-slate-500' : 'bg-white border-slate-300 text-slate-900 placeholder-slate-400'}`;
 const selectCls = (dark) => `h-11 px-3 rounded-xl border text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 md:w-48 ${dark ? 'bg-slate-900 border-slate-700 text-slate-200' : 'bg-white border-slate-300 text-slate-700'}`;
 
+// ---- Site-wide 3D language --------------------------------------------
+// Every raised surface (cards, panels, modals) uses the same layered
+// shadow + hover-lift so depth reads consistently across the whole page,
+// not just in one hero. Every solid button behaves like a physical 3D
+// key: a coloured "edge" beneath it that the button presses into on click.
+const card3D = (dark, extra = '') =>
+  `${extra} border transition-all duration-300 ease-out will-change-transform ` +
+  (dark
+    ? 'border-slate-800 bg-slate-900 shadow-[0_1px_1px_rgba(0,0,0,0.4),0_10px_20px_-8px_rgba(0,0,0,0.55),0_28px_44px_-18px_rgba(0,0,0,0.65)] hover:shadow-[0_2px_2px_rgba(0,0,0,0.5),0_18px_30px_-8px_rgba(0,0,0,0.6),0_40px_64px_-18px_rgba(0,0,0,0.7)]'
+    : 'border-slate-200 bg-white shadow-[0_1px_1px_rgba(15,23,42,0.04),0_10px_20px_-8px_rgba(15,23,42,0.12),0_28px_44px_-18px_rgba(15,23,42,0.16)] hover:shadow-[0_2px_2px_rgba(15,23,42,0.05),0_18px_30px_-8px_rgba(15,23,42,0.16),0_40px_64px_-18px_rgba(15,23,42,0.2)]') +
+  ' hover:-translate-y-1';
+
+const btn3D = (dark, tone = 'emerald') => {
+  const edge = {
+    emerald: 'shadow-[0_4px_0_0_rgba(4,120,87,1),0_8px_14px_-4px_rgba(4,120,87,0.45)] active:shadow-[0_1px_0_0_rgba(4,120,87,1),0_2px_4px_-1px_rgba(4,120,87,0.4)]',
+    indigo: 'shadow-[0_4px_0_0_rgba(67,56,202,1),0_8px_14px_-4px_rgba(67,56,202,0.45)] active:shadow-[0_1px_0_0_rgba(67,56,202,1),0_2px_4px_-1px_rgba(67,56,202,0.4)]',
+    red: 'shadow-[0_4px_0_0_rgba(153,27,27,1),0_8px_14px_-4px_rgba(153,27,27,0.4)] active:shadow-[0_1px_0_0_rgba(153,27,27,1),0_2px_4px_-1px_rgba(153,27,27,0.35)]',
+    slate: dark
+      ? 'shadow-[0_4px_0_0_rgba(30,41,59,1),0_8px_14px_-4px_rgba(0,0,0,0.5)] active:shadow-[0_1px_0_0_rgba(30,41,59,1),0_2px_4px_-1px_rgba(0,0,0,0.4)]'
+      : 'shadow-[0_4px_0_0_rgba(203,213,225,1),0_8px_14px_-4px_rgba(15,23,42,0.15)] active:shadow-[0_1px_0_0_rgba(203,213,225,1),0_2px_4px_-1px_rgba(15,23,42,0.1)]',
+  }[tone];
+  return `transition-all duration-150 ${edge} hover:-translate-y-0.5 active:translate-y-1`;
+};
+// -------------------------------------------------------------------------
+
 /* ---------------------------- small presentational bits ---------------------------- */
 
 function NavBtn({ active, onClick, children, dark }) {
@@ -35,7 +60,7 @@ function NavBtn({ active, onClick, children, dark }) {
 
 function StatTile({ value, label, dark }) {
   return (
-    <div className={`rounded-xl border px-4 py-3 shadow-sm min-w-[110px] ${dark ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'}`}>
+    <div className={card3D(dark, 'rounded-xl px-4 py-3 min-w-[110px]')}>
       <div className={`font-display text-2xl sm:text-3xl font-extrabold leading-none ${dark ? 'text-emerald-400' : 'text-emerald-700'}`}>{value}</div>
       <div className="text-[11px] uppercase tracking-wide text-slate-500 mt-1">{label}</div>
     </div>
@@ -192,9 +217,6 @@ function JobOrbit({ dark }) {
 
 function JobCard({ job, saved, onToggleSave, onOpen, currentUser, onRequestAuth, highlight, dark }) {
   const tilt = useTilt();
-  const cardCls = dark
-    ? (highlight ? 'border-emerald-800 bg-emerald-500/5' : 'border-slate-800 bg-slate-900 hover:border-slate-700')
-    : (highlight ? 'border-emerald-300 bg-emerald-50/50' : 'border-slate-200 bg-white hover:border-slate-300');
 
   return (
     <div
@@ -203,11 +225,11 @@ function JobCard({ job, saved, onToggleSave, onOpen, currentUser, onRequestAuth,
       onMouseMove={tilt.onMouseMove}
       onMouseLeave={tilt.onMouseLeave}
       style={tilt.tiltStyle}
-      className={`h-full cursor-pointer rounded-2xl border p-5 shadow-sm hover:shadow-xl flex flex-col gap-3 fade-in ${cardCls}`}
+      className={card3D(dark, `h-full cursor-pointer rounded-2xl p-5 flex flex-col gap-3 fade-in ${highlight ? (dark ? 'ring-1 ring-emerald-800' : 'ring-1 ring-emerald-300') : ''}`)}
     >
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-center gap-3 min-w-0">
-          <div className={`h-11 w-11 shrink-0 rounded-xl text-white flex items-center justify-center text-[11px] font-bold font-display ${dark ? 'bg-slate-700' : 'bg-slate-900'}`}>{initials(job.company)}</div>
+          <div className={`h-11 w-11 shrink-0 rounded-xl text-white flex items-center justify-center text-[11px] font-bold font-display shadow-[inset_0_1px_0_rgba(255,255,255,0.25),0_3px_6px_rgba(0,0,0,0.25)] ${dark ? 'bg-slate-700' : 'bg-slate-900'}`}>{initials(job.company)}</div>
           <div className="min-w-0">
             <div className={`text-xs truncate ${dark ? 'text-slate-400' : 'text-slate-500'}`}>{job.company}</div>
             <h3 className={`font-display font-bold leading-snug line-clamp-2 ${dark ? 'text-slate-50' : 'text-slate-900'}`}>{job.role}</h3>
@@ -216,7 +238,7 @@ function JobCard({ job, saved, onToggleSave, onOpen, currentUser, onRequestAuth,
         <button
           onClick={(e) => { e.stopPropagation(); onToggleSave(); }}
           aria-label={saved ? 'Remove from saved roles' : 'Save this role'}
-          className={`h-9 w-9 shrink-0 flex items-center justify-center rounded-lg border transition ${saved ? (dark ? 'border-emerald-700 text-emerald-400 bg-emerald-500/10' : 'border-emerald-300 text-emerald-600 bg-emerald-50') : (dark ? 'border-slate-700 text-slate-500 hover:text-slate-300 hover:border-slate-600' : 'border-slate-200 text-slate-400 hover:text-slate-600 hover:border-slate-300')}`}
+          className={`h-9 w-9 shrink-0 flex items-center justify-center rounded-lg border transition-all duration-150 hover:-translate-y-0.5 active:translate-y-0 active:scale-90 ${saved ? (dark ? 'border-emerald-700 text-emerald-400 bg-emerald-500/10' : 'border-emerald-300 text-emerald-600 bg-emerald-50') : (dark ? 'border-slate-700 text-slate-500 hover:text-slate-300 hover:border-slate-600' : 'border-slate-200 text-slate-400 hover:text-slate-600 hover:border-slate-300')}`}
         >
           <Bookmark size={16} fill={saved ? 'currentColor' : 'none'} />
         </button>
@@ -274,10 +296,10 @@ function Carousel({ items, renderItem, dark }) {
           </div>
         ))}
       </div>
-      <button onClick={() => scrollBy(-1)} aria-label="Scroll left" className={`hidden sm:flex absolute -left-3 top-1/2 -translate-y-1/2 h-9 w-9 rounded-full items-center justify-center border shadow-sm ${arrowCls}`}>
+      <button onClick={() => scrollBy(-1)} aria-label="Scroll left" className={`hidden sm:flex absolute -left-3 top-1/2 -translate-y-1/2 h-9 w-9 rounded-full items-center justify-center border shadow-[0_4px_10px_-2px_rgba(15,23,42,0.25)] transition-transform duration-150 hover:scale-110 active:scale-90 ${arrowCls}`}>
         <ChevronLeft size={16} />
       </button>
-      <button onClick={() => scrollBy(1)} aria-label="Scroll right" className={`hidden sm:flex absolute -right-3 top-1/2 -translate-y-1/2 h-9 w-9 rounded-full items-center justify-center border shadow-sm ${arrowCls}`}>
+      <button onClick={() => scrollBy(1)} aria-label="Scroll right" className={`hidden sm:flex absolute -right-3 top-1/2 -translate-y-1/2 h-9 w-9 rounded-full items-center justify-center border shadow-[0_4px_10px_-2px_rgba(15,23,42,0.25)] transition-transform duration-150 hover:scale-110 active:scale-90 ${arrowCls}`}>
         <ChevronRight size={16} />
       </button>
     </div>
@@ -297,7 +319,7 @@ function JobDetailModal({ job, saved, onToggleSave, onClose, currentUser, onRequ
 
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-slate-900/60 backdrop-blur-sm" onClick={onClose}>
-      <div className={`w-full sm:max-w-2xl sm:rounded-2xl rounded-t-2xl max-h-[92vh] overflow-y-auto ${panelBg}`} onClick={(e) => e.stopPropagation()}>
+      <div className={`modal-pop-3d w-full sm:max-w-2xl sm:rounded-2xl rounded-t-2xl max-h-[92vh] overflow-y-auto shadow-[0_40px_80px_-20px_rgba(0,0,0,0.5)] ${panelBg}`} onClick={(e) => e.stopPropagation()}>
         <div className={`sticky top-0 ${panelBg} border-b px-6 py-4 flex items-start justify-between gap-4 z-10 ${borderCol}`}>
           <div className="flex items-center gap-3 min-w-0">
             <div className={`h-12 w-12 shrink-0 rounded-xl text-white flex items-center justify-center text-[11px] font-bold font-display ${dark ? 'bg-slate-700' : 'bg-slate-900'}`}>{initials(job.company)}</div>
@@ -306,7 +328,7 @@ function JobDetailModal({ job, saved, onToggleSave, onClose, currentUser, onRequ
               <h2 className={`font-display font-bold text-lg leading-snug ${dark ? 'text-slate-50' : 'text-slate-900'}`}>{job.role}</h2>
             </div>
           </div>
-          <button onClick={onClose} aria-label="Close" className={`shrink-0 ${dark ? 'text-slate-500 hover:text-slate-200' : 'text-slate-400 hover:text-slate-700'}`}><X size={20} /></button>
+          <button onClick={onClose} aria-label="Close" className={`shrink-0 transition-transform active:scale-75 ${dark ? 'text-slate-500 hover:text-slate-200' : 'text-slate-400 hover:text-slate-700'}`}><X size={20} /></button>
         </div>
 
         <div className="px-6 py-5 space-y-5">
@@ -352,15 +374,15 @@ function JobDetailModal({ job, saved, onToggleSave, onClose, currentUser, onRequ
         </div>
 
         <div className={`sticky bottom-0 ${panelBg} border-t px-6 py-4 flex items-center gap-3 ${borderCol}`}>
-          <button onClick={onToggleSave} className={`h-11 px-4 rounded-xl border font-medium text-sm flex items-center gap-2 shrink-0 ${saved ? (dark ? 'border-emerald-700 text-emerald-400 bg-emerald-500/10' : 'border-emerald-300 text-emerald-700 bg-emerald-50') : (dark ? 'border-slate-700 text-slate-400 hover:border-slate-600' : 'border-slate-200 text-slate-600 hover:border-slate-300')}`}>
+          <button onClick={onToggleSave} className={`h-11 px-4 rounded-xl border font-medium text-sm flex items-center gap-2 shrink-0 transition-all duration-150 hover:-translate-y-0.5 active:translate-y-0 active:scale-95 ${saved ? (dark ? 'border-emerald-700 text-emerald-400 bg-emerald-500/10' : 'border-emerald-300 text-emerald-700 bg-emerald-50') : (dark ? 'border-slate-700 text-slate-400 hover:border-slate-600' : 'border-slate-200 text-slate-600 hover:border-slate-300')}`}>
             <Bookmark size={16} fill={saved ? 'currentColor' : 'none'} /> <span className="hidden sm:inline">{saved ? 'Saved' : 'Save role'}</span>
           </button>
           {currentUser ? (
-            <a href={job.link} target="_blank" rel="noopener noreferrer" className="flex-1 h-11 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-sm flex items-center justify-center gap-2 transition-transform hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98]">
+            <a href={job.link} target="_blank" rel="noopener noreferrer" className={`flex-1 h-11 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-sm flex items-center justify-center gap-2 ${btn3D(dark)}`}>
               Apply on {job.company}'s official site <ExternalLink size={15} />
             </a>
           ) : (
-            <button onClick={onRequestAuth} className="flex-1 h-11 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm">
+            <button onClick={onRequestAuth} className={`flex-1 h-11 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm ${btn3D(dark, 'indigo')}`}>
               Log in or sign up to apply
             </button>
           )}
@@ -396,10 +418,10 @@ function AuthModal({ mode, onClose, onSwitch, onSignup, onLogin, onGoogle, error
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm" onClick={onClose}>
-      <div className={`w-full max-w-md border rounded-2xl shadow-xl p-6 max-h-[90vh] overflow-y-auto ${panelBg}`} onClick={(e) => e.stopPropagation()}>
+      <div className={`modal-pop-3d w-full max-w-md border rounded-2xl shadow-[0_40px_80px_-20px_rgba(0,0,0,0.5)] p-6 max-h-[90vh] overflow-y-auto ${panelBg}`} onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between mb-1">
           <h2 className={`font-display text-xl font-bold ${dark ? 'text-slate-50' : 'text-slate-900'}`}>{isSignup ? 'Create your account' : 'Log in'}</h2>
-          <button onClick={onClose} aria-label="Close" className={dark ? 'text-slate-500 hover:text-slate-200' : 'text-slate-400 hover:text-slate-700'}><X size={20} /></button>
+          <button onClick={onClose} aria-label="Close" className={`transition-transform active:scale-75 ${dark ? 'text-slate-500 hover:text-slate-200' : 'text-slate-400 hover:text-slate-700'}`}><X size={20} /></button>
         </div>
         <p className={`text-sm mb-5 ${dark ? 'text-slate-400' : 'text-slate-500'}`}>{isSignup ? "Free to join — you'll need an account to apply to any role." : 'Welcome back — pick up your saved roles and matches.'}</p>
 
@@ -408,7 +430,7 @@ function AuthModal({ mode, onClose, onSwitch, onSignup, onLogin, onGoogle, error
         <button
           type="button"
           onClick={onGoogle}
-          className={`w-full h-11 rounded-lg border font-semibold text-sm flex items-center justify-center gap-2 mb-4 transition ${dark ? 'border-slate-700 text-slate-200 hover:border-slate-600' : 'border-slate-300 text-slate-700 hover:border-slate-400'}`}
+          className={`w-full h-11 rounded-lg border font-semibold text-sm flex items-center justify-center gap-2 mb-4 transition-all duration-150 hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] ${dark ? 'border-slate-700 text-slate-200 hover:border-slate-600' : 'border-slate-300 text-slate-700 hover:border-slate-400'}`}
         >
           <GoogleMark /> Continue with Google
         </button>
@@ -430,13 +452,13 @@ function AuthModal({ mode, onClose, onSwitch, onSignup, onLogin, onGoogle, error
               <input type="checkbox" checked={form.agree} onChange={(e) => setForm({ ...form, agree: e.target.checked })} className="mt-0.5" />
               <span>I agree to the <button type="button" onClick={onOpenTC} className={dark ? 'text-emerald-400 underline underline-offset-2' : 'text-emerald-700 underline underline-offset-2'}>Terms & Conditions</button>, including storage of my email, phone number and address.</span>
             </label>
-            <button type="submit" disabled={busy} className="w-full h-11 rounded-lg bg-emerald-600 text-white font-semibold hover:bg-emerald-700 transition mt-2 disabled:opacity-60">{busy ? 'Creating account…' : 'Create account'}</button>
+            <button type="submit" disabled={busy} className={`w-full h-11 rounded-lg bg-emerald-600 text-white font-semibold hover:bg-emerald-700 mt-2 disabled:opacity-60 disabled:translate-y-0 disabled:shadow-none ${btn3D(dark)}`}>{busy ? 'Creating account…' : 'Create account'}</button>
           </form>
         ) : (
           <form className="space-y-3" onSubmit={submitLogin}>
             <Field label="Email" dark={dark}><input type="email" value={loginForm.email} onChange={(e) => setLoginForm({ ...loginForm, email: e.target.value })} className={inputCls(dark)} placeholder="priya@example.com" /></Field>
             <Field label="Password" dark={dark}><input type="password" value={loginForm.password} onChange={(e) => setLoginForm({ ...loginForm, password: e.target.value })} className={inputCls(dark)} placeholder="Your password" /></Field>
-            <button type="submit" disabled={busy} className="w-full h-11 rounded-lg bg-emerald-600 text-white font-semibold hover:bg-emerald-700 transition mt-2 disabled:opacity-60">{busy ? 'Logging in…' : 'Log in'}</button>
+            <button type="submit" disabled={busy} className={`w-full h-11 rounded-lg bg-emerald-600 text-white font-semibold hover:bg-emerald-700 mt-2 disabled:opacity-60 disabled:translate-y-0 disabled:shadow-none ${btn3D(dark)}`}>{busy ? 'Logging in…' : 'Log in'}</button>
           </form>
         )}
 
@@ -462,10 +484,10 @@ function TCModal({ onClose, dark }) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm" onClick={onClose}>
-      <div className={`w-full max-w-lg border rounded-2xl shadow-xl p-6 max-h-[85vh] overflow-y-auto ${panelBg}`} onClick={(e) => e.stopPropagation()}>
+      <div className={`modal-pop-3d w-full max-w-lg border rounded-2xl shadow-[0_40px_80px_-20px_rgba(0,0,0,0.5)] p-6 max-h-[85vh] overflow-y-auto ${panelBg}`} onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between mb-4">
           <h2 className={`font-display text-xl font-bold flex items-center gap-2 ${strong}`}><ShieldCheck size={20} className="text-emerald-600" /> Terms & Conditions</h2>
-          <button onClick={onClose} className={dark ? 'text-slate-500 hover:text-slate-200' : 'text-slate-400 hover:text-slate-700'} aria-label="Close"><X size={20} /></button>
+          <button onClick={onClose} className={`transition-transform active:scale-75 ${dark ? 'text-slate-500 hover:text-slate-200' : 'text-slate-400 hover:text-slate-700'}`} aria-label="Close"><X size={20} /></button>
         </div>
         <div className={`space-y-4 text-sm leading-relaxed ${body}`}>
           <p><strong className={strong}>Your data.</strong> When you create an account, your email address, mobile number and address are stored so we can manage your login, personalize job recommendations against your saved skills, and send you relevant job alerts and application updates.</p>
@@ -500,7 +522,7 @@ function SkillsInput({ skills, onChange, dark }) {
         {skills.map((s) => (
           <span key={s} className={`flex items-center gap-1.5 text-xs font-medium pl-2.5 pr-1.5 py-1 rounded-full border ${dark ? 'bg-emerald-500/10 text-emerald-400 border-emerald-800' : 'bg-emerald-50 text-emerald-700 border-emerald-200'}`}>
             {s}
-            <button type="button" onClick={() => removeSkill(s)} aria-label={`Remove ${s}`} className="hover:opacity-70">
+            <button type="button" onClick={() => removeSkill(s)} aria-label={`Remove ${s}`} className="hover:opacity-70 transition-transform active:scale-75">
               <X size={12} />
             </button>
           </span>
@@ -514,7 +536,7 @@ function SkillsInput({ skills, onChange, dark }) {
           placeholder="e.g. Java — press Enter or tap Add"
           className={inputCls(dark)}
         />
-        <button type="button" onClick={addSkill} className="h-10 px-4 rounded-lg bg-emerald-600 text-white text-sm font-semibold hover:bg-emerald-700 flex items-center gap-1 shrink-0">
+        <button type="button" onClick={addSkill} className={`h-10 px-4 rounded-lg bg-emerald-600 text-white text-sm font-semibold hover:bg-emerald-700 flex items-center gap-1 shrink-0 ${btn3D(dark)}`}>
           <Plus size={14} /> Add
         </button>
       </div>
@@ -555,7 +577,7 @@ function CompleteProfileModal({ onSubmit, onOpenTC, dark }) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/70 backdrop-blur-sm">
-      <div className={`w-full max-w-md border rounded-2xl shadow-xl p-6 ${dark ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'}`}>
+      <div className={`modal-pop-3d w-full max-w-md border rounded-2xl shadow-[0_40px_80px_-20px_rgba(0,0,0,0.5)] p-6 ${dark ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'}`}>
         <h2 className={`font-display text-xl font-bold mb-1 ${dark ? 'text-slate-50' : 'text-slate-900'}`}>Just one more thing</h2>
         <p className={`text-sm mb-4 ${dark ? 'text-slate-400' : 'text-slate-500'}`}>You signed in with Google, which doesn't share a phone number or address with us — we still need those to finish setting up your account.</p>
         {error && <div className={`mb-4 text-sm rounded-lg px-3 py-2 border ${dark ? 'text-red-300 bg-red-500/10 border-red-900' : 'text-red-700 bg-red-50 border-red-200'}`}>{error}</div>}
@@ -566,7 +588,7 @@ function CompleteProfileModal({ onSubmit, onOpenTC, dark }) {
             <input type="checkbox" checked={agree} onChange={(e) => setAgree(e.target.checked)} className="mt-0.5" />
             <span>I agree to the <button type="button" onClick={onOpenTC} className={dark ? 'text-emerald-400 underline underline-offset-2' : 'text-emerald-700 underline underline-offset-2'}>Terms & Conditions</button>, including storage of my email, phone number and address.</span>
           </label>
-          <button type="submit" disabled={busy} className="w-full h-11 rounded-lg bg-emerald-600 text-white font-semibold hover:bg-emerald-700 transition disabled:opacity-60">{busy ? 'Saving…' : 'Save and continue'}</button>
+          <button type="submit" disabled={busy} className={`w-full h-11 rounded-lg bg-emerald-600 text-white font-semibold hover:bg-emerald-700 disabled:opacity-60 disabled:translate-y-0 disabled:shadow-none ${btn3D(dark)}`}>{busy ? 'Saving…' : 'Save and continue'}</button>
         </form>
       </div>
     </div>
@@ -576,7 +598,7 @@ function CompleteProfileModal({ onSubmit, onOpenTC, dark }) {
 function Toast({ message }) {
   if (!message) return null;
   return (
-    <div className="fixed bottom-5 left-1/2 -translate-x-1/2 z-50 bg-slate-900 text-white text-sm px-4 py-2.5 rounded-lg shadow-xl fade-in">
+    <div className="fixed bottom-5 left-1/2 -translate-x-1/2 z-50 bg-slate-900 text-white text-sm px-4 py-2.5 rounded-lg shadow-[0_20px_40px_-12px_rgba(0,0,0,0.5)] fade-in">
       {message}
     </div>
   );
@@ -856,10 +878,10 @@ export default function App() {
   return (
     <div className={`min-h-screen font-body ${dark ? 'bg-slate-950 text-slate-50' : 'bg-slate-50 text-slate-900'}`}>
       {/* nav */}
-      <div className={`border-b sticky top-0 z-40 backdrop-blur ${dark ? 'bg-slate-950/95 border-slate-800' : 'bg-white/95 border-slate-200'}`}>
+      <div className={`border-b sticky top-0 z-40 backdrop-blur shadow-[0_2px_2px_rgba(0,0,0,0.03),0_8px_20px_-10px_rgba(15,23,42,0.15)] ${dark ? 'bg-slate-950/95 border-slate-800' : 'bg-white/95 border-slate-200'}`}>
         <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
-          <button onClick={goHome} className="flex items-center gap-2 shrink-0">
-            <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-emerald-400 to-emerald-600 text-white flex items-center justify-center shadow-md shadow-emerald-600/30"><Leaf size={18} /></div>
+          <button onClick={goHome} className="flex items-center gap-2 shrink-0 transition-transform hover:-translate-y-0.5 active:translate-y-0 active:scale-95">
+            <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-emerald-400 to-emerald-600 text-white flex items-center justify-center shadow-[inset_0_1px_0_rgba(255,255,255,0.35),0_4px_10px_rgba(4,120,87,0.4)]"><Leaf size={18} /></div>
             <span className={`font-display font-extrabold text-lg tracking-tight hidden sm:inline ${dark ? 'text-slate-50' : 'text-slate-900'}`}>Career<span className="text-emerald-600">Banyan</span></span>
           </button>
 
@@ -869,21 +891,21 @@ export default function App() {
           </nav>
 
           <div className="flex items-center gap-2">
-            <button onClick={toggleTheme} aria-label={dark ? 'Switch to light theme' : 'Switch to dark theme'} className={`h-9 w-9 flex items-center justify-center rounded-lg border transition ${dark ? 'border-slate-700 text-amber-400 hover:border-slate-600' : 'border-slate-200 text-slate-600 hover:border-slate-300'}`}>
+            <button onClick={toggleTheme} aria-label={dark ? 'Switch to light theme' : 'Switch to dark theme'} className={`h-9 w-9 flex items-center justify-center rounded-lg border transition-all duration-150 hover:-translate-y-0.5 active:translate-y-0 active:scale-90 ${dark ? 'border-slate-700 text-amber-400 hover:border-slate-600' : 'border-slate-200 text-slate-600 hover:border-slate-300'}`}>
               {dark ? <Sun size={16} /> : <Moon size={16} />}
             </button>
             {currentUser ? (
               <>
                 <span className={`hidden sm:inline text-sm ${dark ? 'text-slate-400' : 'text-slate-500'}`}>Hi, {currentUser.name.split(' ')[0]}</span>
-                <button onClick={handleLogout} className={`text-sm h-9 px-3 rounded-lg border flex items-center gap-1.5 ${dark ? 'border-slate-700 text-slate-300 hover:border-slate-600' : 'border-slate-200 text-slate-600 hover:border-slate-300'}`}><LogOut size={14} /> <span className="hidden sm:inline">Log out</span></button>
+                <button onClick={handleLogout} className={`text-sm h-9 px-3 rounded-lg border flex items-center gap-1.5 transition-all duration-150 hover:-translate-y-0.5 active:translate-y-0 active:scale-95 ${dark ? 'border-slate-700 text-slate-300 hover:border-slate-600' : 'border-slate-200 text-slate-600 hover:border-slate-300'}`}><LogOut size={14} /> <span className="hidden sm:inline">Log out</span></button>
               </>
             ) : (
               <>
-                <button onClick={() => { setAuthError(''); setAuthModal('login'); }} className={`text-sm h-9 px-3 rounded-lg border ${dark ? 'border-slate-700 text-slate-300 hover:border-slate-600' : 'border-slate-200 text-slate-600 hover:border-slate-300'}`}>Log in</button>
-                <button onClick={() => { setAuthError(''); setAuthModal('signup'); }} className="text-sm h-9 px-3 rounded-lg bg-emerald-600 text-white font-semibold hover:bg-emerald-700 transition-transform hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98]">Sign up free</button>
+                <button onClick={() => { setAuthError(''); setAuthModal('login'); }} className={`text-sm h-9 px-3 rounded-lg border transition-all duration-150 hover:-translate-y-0.5 active:translate-y-0 active:scale-95 ${dark ? 'border-slate-700 text-slate-300 hover:border-slate-600' : 'border-slate-200 text-slate-600 hover:border-slate-300'}`}>Log in</button>
+                <button onClick={() => { setAuthError(''); setAuthModal('signup'); }} className={`text-sm h-9 px-3 rounded-lg bg-emerald-600 text-white font-semibold hover:bg-emerald-700 ${btn3D(dark)}`}>Sign up free</button>
               </>
             )}
-            <button className={`md:hidden h-9 w-9 flex items-center justify-center rounded-lg border ${dark ? 'border-slate-700 text-slate-300' : 'border-slate-200 text-slate-600'}`} onClick={() => setMobileNav((v) => !v)} aria-label="Menu"><Menu size={16} /></button>
+            <button className={`md:hidden h-9 w-9 flex items-center justify-center rounded-lg border transition-all duration-150 active:scale-90 ${dark ? 'border-slate-700 text-slate-300' : 'border-slate-200 text-slate-600'}`} onClick={() => setMobileNav((v) => !v)} aria-label="Menu"><Menu size={16} /></button>
           </div>
         </div>
         {mobileNav && (
@@ -898,7 +920,7 @@ export default function App() {
         <div className={dark ? 'bg-indigo-500/10 border-b border-indigo-900' : 'bg-indigo-50 border-b border-indigo-100'}>
           <div className={`max-w-6xl mx-auto px-4 sm:px-6 py-2 flex items-center justify-between gap-3 text-xs sm:text-sm font-medium ${dark ? 'text-indigo-300' : 'text-indigo-800'}`}>
             <span>Live listings, synced daily. Sign in to unlock Apply — it's always free.</span>
-            <button onClick={() => setShowBanner(false)} aria-label="Dismiss" className="shrink-0"><X size={14} /></button>
+            <button onClick={() => setShowBanner(false)} aria-label="Dismiss" className="shrink-0 transition-transform active:scale-75"><X size={14} /></button>
           </div>
         </div>
       )}
@@ -906,8 +928,9 @@ export default function App() {
       <main className="max-w-6xl mx-auto px-4 sm:px-6 py-8">
         {page === 'home' && (
           <>
-            <section className={`mb-8 rounded-3xl border p-6 sm:p-8 bg-gradient-to-br ${dark ? 'from-emerald-500/5 via-slate-950 to-indigo-500/5 border-slate-800' : 'from-emerald-50 via-white to-indigo-50 border-slate-200'}`}>
-              <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6 mb-6">
+            <section className={`relative overflow-hidden mb-8 rounded-3xl border p-6 sm:p-8 bg-gradient-to-br shadow-[0_1px_1px_rgba(0,0,0,0.03),0_20px_50px_-24px_rgba(15,23,42,0.35)] ${dark ? 'from-emerald-500/5 via-slate-950 to-indigo-500/5 border-slate-800' : 'from-emerald-50 via-white to-indigo-50 border-slate-200'}`}>
+              <div aria-hidden="true" className={`orbit-floor absolute -right-10 -top-10 h-72 w-72 rounded-full pointer-events-none ${dark ? 'text-slate-800' : 'text-slate-200'}`} style={{ opacity: 0.5 }} />
+              <div className="relative flex flex-col lg:flex-row lg:items-end justify-between gap-6 mb-6">
                 <div>
                   <div className="text-xs font-semibold text-emerald-600 uppercase tracking-widest mb-2">Fresher & experienced roles · Across India</div>
                   <h1 className={`font-display text-3xl sm:text-4xl font-extrabold leading-tight max-w-xl ${dark ? 'text-slate-50' : 'text-slate-900'}`}>New roles land here first. Yours could be next.</h1>
@@ -921,7 +944,7 @@ export default function App() {
                 </div>
               </div>
 
-              <div className={`border rounded-2xl p-3 sm:p-4 shadow-sm ${dark ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'}`}>
+              <div className={card3D(dark, 'rounded-2xl p-3 sm:p-4')}>
                 <div className="flex flex-col md:flex-row gap-3">
                   <div className="relative flex-1">
                     <Search size={16} className={`absolute left-3 top-1/2 -translate-y-1/2 ${dark ? 'text-slate-500' : 'text-slate-400'}`} />
@@ -941,25 +964,25 @@ export default function App() {
                     <option>All Categories</option>
                     {CATEGORIES.map((c) => <option key={c}>{c}</option>)}
                   </select>
-                  <button onClick={applyFilters} className="h-11 px-6 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-sm shrink-0 flex items-center justify-center gap-2 transition-transform hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98]">
+                  <button onClick={applyFilters} className={`h-11 px-6 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-sm shrink-0 flex items-center justify-center gap-2 ${btn3D(dark)}`}>
                     <Search size={15} /> Search
                   </button>
                 </div>
 
                 <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div className={`rounded-xl border p-3 ${dark ? 'border-slate-800 bg-slate-800/30' : 'border-slate-100 bg-slate-50'}`}>
+                  <div className={`rounded-xl border p-3 shadow-[inset_0_1px_3px_rgba(0,0,0,0.06)] ${dark ? 'border-slate-800 bg-slate-800/30' : 'border-slate-100 bg-slate-50'}`}>
                     <div className={`text-[11px] uppercase tracking-wide font-semibold mb-2 ${dark ? 'text-slate-500' : 'text-slate-400'}`}>Role type</div>
                     <div className="no-scrollbar flex gap-2 overflow-x-auto pb-1">
                       {[['all', 'All roles'], ['it', 'IT roles'], ['nonit', 'Non-IT roles']].map(([val, label]) => (
-                        <button key={val} onClick={() => setDraftFilters((f) => ({ ...f, domain: val }))} className={`shrink-0 h-9 px-4 rounded-full text-sm font-medium border transition ${draftFilters.domain === val ? 'bg-emerald-600 text-white border-emerald-600' : (dark ? 'border-slate-700 text-slate-300 hover:border-slate-600' : 'border-slate-200 text-slate-600 hover:border-slate-300')}`}>{label}</button>
+                        <button key={val} onClick={() => setDraftFilters((f) => ({ ...f, domain: val }))} className={`shrink-0 h-9 px-4 rounded-full text-sm font-medium border transition-all duration-150 hover:-translate-y-0.5 active:translate-y-0 active:scale-95 ${draftFilters.domain === val ? 'bg-emerald-600 text-white border-emerald-600 shadow-[0_3px_0_0_rgba(4,120,87,1)]' : (dark ? 'border-slate-700 text-slate-300 hover:border-slate-600' : 'border-slate-200 text-slate-600 hover:border-slate-300')}`}>{label}</button>
                       ))}
                     </div>
                   </div>
-                  <div className={`rounded-xl border p-3 ${dark ? 'border-slate-800 bg-slate-800/30' : 'border-slate-100 bg-slate-50'}`}>
+                  <div className={`rounded-xl border p-3 shadow-[inset_0_1px_3px_rgba(0,0,0,0.06)] ${dark ? 'border-slate-800 bg-slate-800/30' : 'border-slate-100 bg-slate-50'}`}>
                     <div className={`text-[11px] uppercase tracking-wide font-semibold mb-2 ${dark ? 'text-slate-500' : 'text-slate-400'}`}>Experience level</div>
                     <div className="no-scrollbar flex gap-2 overflow-x-auto pb-1">
                       {[['all', 'All levels'], ['fresher', 'Freshers'], ['experienced', 'Experienced']].map(([val, label]) => (
-                        <button key={val} onClick={() => setDraftFilters((f) => ({ ...f, level: val }))} className={`shrink-0 h-9 px-4 rounded-full text-sm font-medium border transition ${draftFilters.level === val ? 'bg-emerald-600 text-white border-emerald-600' : (dark ? 'border-slate-700 text-slate-300 hover:border-slate-600' : 'border-slate-200 text-slate-600 hover:border-slate-300')}`}>{label}</button>
+                        <button key={val} onClick={() => setDraftFilters((f) => ({ ...f, level: val }))} className={`shrink-0 h-9 px-4 rounded-full text-sm font-medium border transition-all duration-150 hover:-translate-y-0.5 active:translate-y-0 active:scale-95 ${draftFilters.level === val ? 'bg-emerald-600 text-white border-emerald-600 shadow-[0_3px_0_0_rgba(4,120,87,1)]' : (dark ? 'border-slate-700 text-slate-300 hover:border-slate-600' : 'border-slate-200 text-slate-600 hover:border-slate-300')}`}>{label}</button>
                       ))}
                     </div>
                   </div>
@@ -1005,7 +1028,7 @@ export default function App() {
                     <div className={`text-center py-16 border border-dashed rounded-2xl ${dark ? 'border-slate-700 bg-slate-900' : 'border-slate-300 bg-white'}`}>
                       <p className={dark ? 'text-slate-200 font-medium' : 'text-slate-700 font-medium'}>No roles match these filters yet.</p>
                       <p className={`text-sm mt-1 ${dark ? 'text-slate-500' : 'text-slate-400'}`}>Try clearing a filter, or check back after the next sync.</p>
-                      <button onClick={clearFilters} className={`mt-4 h-9 px-4 rounded-lg border text-sm ${dark ? 'border-slate-700 text-slate-300 hover:border-slate-600' : 'border-slate-200 text-slate-600 hover:border-slate-300'}`}>Clear filters</button>
+                      <button onClick={clearFilters} className={`mt-4 h-9 px-4 rounded-lg border text-sm transition-all duration-150 hover:-translate-y-0.5 active:translate-y-0 active:scale-95 ${dark ? 'border-slate-700 text-slate-300 hover:border-slate-600' : 'border-slate-200 text-slate-600 hover:border-slate-300'}`}>Clear filters</button>
                     </div>
                   ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -1017,12 +1040,12 @@ export default function App() {
             )}
 
             {!currentUser && (
-              <div className={`mt-8 border rounded-2xl p-5 sm:p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 ${dark ? 'border-emerald-800 bg-emerald-500/5' : 'border-emerald-200 bg-emerald-50'}`}>
+              <div className={`mt-8 border rounded-2xl p-5 sm:p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 transition-all duration-300 hover:-translate-y-1 ${dark ? 'border-emerald-800 bg-emerald-500/5 shadow-[0_10px_30px_-14px_rgba(16,185,129,0.35)] hover:shadow-[0_18px_40px_-14px_rgba(16,185,129,0.45)]' : 'border-emerald-200 bg-emerald-50 shadow-[0_10px_30px_-14px_rgba(16,185,129,0.3)] hover:shadow-[0_18px_40px_-14px_rgba(16,185,129,0.4)]'}`}>
                 <div>
                   <div className={`font-display font-bold text-base ${dark ? 'text-slate-100' : 'text-slate-900'}`}>Get roles matched to you</div>
                   <div className={`text-sm mt-1 ${dark ? 'text-slate-400' : 'text-slate-600'}`}>Create a free account to unlock Apply, save roles, and see picks based on your skills.</div>
                 </div>
-                <button onClick={() => { setAuthError(''); setAuthModal('signup'); }} className="h-10 px-5 rounded-lg bg-emerald-600 text-white font-semibold shrink-0 hover:bg-emerald-700 transition-transform hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98]">Sign up free</button>
+                <button onClick={() => { setAuthError(''); setAuthModal('signup'); }} className={`h-10 px-5 rounded-lg bg-emerald-600 text-white font-semibold shrink-0 hover:bg-emerald-700 ${btn3D(dark)}`}>Sign up free</button>
               </div>
             )}
           </>
@@ -1039,7 +1062,7 @@ export default function App() {
                   <div className={`text-center py-16 border border-dashed rounded-2xl ${dark ? 'border-slate-700 bg-slate-900' : 'border-slate-300 bg-white'}`}>
                     <p className={dark ? 'text-slate-200 font-medium' : 'text-slate-700 font-medium'}>You haven't saved any roles yet.</p>
                     <p className={`text-sm mt-1 ${dark ? 'text-slate-500' : 'text-slate-400'}`}>Tap the bookmark icon on a listing to keep it here.</p>
-                    <button onClick={() => setPage('home')} className="mt-4 h-9 px-4 rounded-lg bg-emerald-600 text-white text-sm font-semibold hover:bg-emerald-700">Browse roles</button>
+                    <button onClick={() => setPage('home')} className={`mt-4 h-9 px-4 rounded-lg bg-emerald-600 text-white text-sm font-semibold hover:bg-emerald-700 ${btn3D(dark)}`}>Browse roles</button>
                   </div>
                 );
               }
@@ -1057,7 +1080,7 @@ export default function App() {
             <h1 className={`font-display text-2xl font-bold mb-1 ${dark ? 'text-slate-100' : 'text-slate-900'}`}>Your profile</h1>
             <p className={`text-sm mb-6 ${dark ? 'text-slate-500' : 'text-slate-500'}`}>This is what we use to personalize your matches and keep your account secure.</p>
 
-            <div className={`border rounded-2xl p-5 mb-6 shadow-sm ${dark ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'}`}>
+            <div className={card3D(dark, 'rounded-2xl p-5 mb-6')}>
               <h2 className={`font-semibold text-sm mb-3 ${dark ? 'text-slate-200' : 'text-slate-800'}`}>Account details</h2>
               <dl className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
                 <div><dt className={`text-xs mb-0.5 ${dark ? 'text-slate-500' : 'text-slate-400'}`}>Name</dt><dd className={dark ? 'text-slate-200' : 'text-slate-800'}>{currentUser.name}</dd></div>
@@ -1067,16 +1090,16 @@ export default function App() {
               </dl>
             </div>
 
-            <div className={`border rounded-2xl p-5 mb-6 shadow-sm ${dark ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'}`}>
+            <div className={card3D(dark, 'rounded-2xl p-5 mb-6')}>
               <h2 className={`font-semibold text-sm mb-1 ${dark ? 'text-slate-200' : 'text-slate-800'}`}>Skills & interests</h2>
               <p className={`text-xs mb-3 ${dark ? 'text-slate-500' : 'text-slate-400'}`}>Add each skill one at a time — we use these to sort "Matched for you" on Home. Changes save automatically.</p>
               <SkillsInput skills={currentUser.skills} onChange={updateSkills} dark={dark} />
             </div>
 
-            <div className={`border rounded-2xl p-5 ${dark ? 'border-red-900/50 bg-red-500/5' : 'border-red-200 bg-red-50'}`}>
+            <div className={`border rounded-2xl p-5 shadow-[0_10px_24px_-14px_rgba(153,27,27,0.3)] ${dark ? 'border-red-900/50 bg-red-500/5' : 'border-red-200 bg-red-50'}`}>
               <h2 className={`font-semibold text-sm mb-1 ${dark ? 'text-red-400' : 'text-red-700'}`}>Delete account</h2>
               <p className={`text-xs mb-3 ${dark ? 'text-slate-400' : 'text-slate-500'}`}>Permanently deletes your login, saved roles and preferences. This cannot be undone.</p>
-              <button onClick={() => { if (window.confirm("Delete your account and all data? This can't be undone.")) deleteAccount(); }} className={`h-9 px-4 rounded-lg border text-sm ${dark ? 'border-red-800 text-red-400 hover:bg-red-500/10' : 'border-red-300 text-red-700 hover:bg-red-100'}`}>Delete my account & data</button>
+              <button onClick={() => { if (window.confirm("Delete your account and all data? This can't be undone.")) deleteAccount(); }} className={`h-9 px-4 rounded-lg border text-sm transition-all duration-150 hover:-translate-y-0.5 active:translate-y-0 active:scale-95 ${dark ? 'border-red-800 text-red-400 hover:bg-red-500/10' : 'border-red-300 text-red-700 hover:bg-red-100'}`}>Delete my account & data</button>
             </div>
           </section>
         )}
