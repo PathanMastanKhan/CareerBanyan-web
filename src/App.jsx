@@ -146,8 +146,11 @@ function useTilt() {
 
 function JobOrbit({ dark }) {
   // The brand's own mark (a leaf — the "banyan tree") sits at the centre,
-  // with the major hiring branches orbiting it like limbs of the tree, and
-  // two live-status cards echoing that roles are syncing in continuously.
+  // with the major hiring branches orbiting it like limbs of the tree.
+  // Kept flat (no rotateX tilt) — tilting this into a fake 3D floor made
+  // the icons land at inconsistent-looking radii and read as scattered
+  // rather than a ring. A clean flat ring + drop shadows reads as more
+  // "3D" in practice than a distorted ellipse.
   const branches = [
     { Icon: Code2, label: 'CSE / IT' },
     { Icon: Cpu, label: 'ECE' },
@@ -156,58 +159,57 @@ function JobOrbit({ dark }) {
     { Icon: FlaskConical, label: 'Chemical' },
     { Icon: Briefcase, label: 'Non-IT' },
   ];
-  const radius = 92;
+  const size = 236;
+  const radius = 100;
 
   return (
     <div
       aria-hidden="true"
-      className="orbit-scene relative hidden md:flex items-center justify-center shrink-0 mx-auto lg:mx-0"
-      style={{ width: 260, height: 220 }}
+      className="relative shrink-0"
+      style={{ width: size, height: size }}
     >
       <div
-        className={`orbit-floor absolute rounded-full ${dark ? 'text-slate-800' : 'text-slate-200'}`}
-        style={{ width: 260, height: 260, opacity: 0.7 }}
+        className={`orbit-floor absolute inset-0 rounded-full ${dark ? 'text-slate-800' : 'text-slate-200'}`}
+        style={{ opacity: 0.6 }}
       />
 
-      <div className="orbit-tilt relative" style={{ width: 200, height: 200 }}>
-        <div className="orbit-ring absolute inset-0">
-          {branches.map(({ Icon, label }, i) => {
-            const angle = (360 / branches.length) * i;
-            return (
-              <div key={label} className="absolute inset-0" style={{ transform: `rotate(${angle}deg)` }}>
-                <div className="absolute left-1/2 top-0" style={{ transform: `translate(-50%, -${radius}px)` }}>
-                  <div style={{ transform: `rotate(${-angle}deg)` }}>
-                    <div className="orbit-icon-counter">
-                      <div
-                        title={label}
-                        className={`h-11 w-11 rounded-xl border shadow-md flex items-center justify-center ${dark ? 'bg-slate-900 border-slate-700 text-emerald-400' : 'bg-white border-slate-200 text-emerald-600'}`}
-                      >
-                        <Icon size={19} />
-                      </div>
+      <div className="orbit-ring absolute inset-0">
+        {branches.map(({ Icon, label }, i) => {
+          const angle = (360 / branches.length) * i;
+          return (
+            <div key={label} className="absolute inset-0" style={{ transform: `rotate(${angle}deg)` }}>
+              <div className="absolute left-1/2 top-0" style={{ transform: `translate(-50%, ${size / 2 - radius}px)` }}>
+                <div style={{ transform: `rotate(${-angle}deg)` }}>
+                  <div className="orbit-icon-counter">
+                    <div
+                      title={label}
+                      className={`h-11 w-11 rounded-xl border shadow-md flex items-center justify-center ${dark ? 'bg-slate-900 border-slate-700 text-emerald-400' : 'bg-white border-slate-200 text-emerald-600'}`}
+                    >
+                      <Icon size={19} />
                     </div>
                   </div>
                 </div>
               </div>
-            );
-          })}
-        </div>
+            </div>
+          );
+        })}
+      </div>
 
-        <div className="absolute inset-0 flex items-center justify-center">
-          <div
-            className={`hub-pulse h-16 w-16 rounded-full flex items-center justify-center ring-4 ${dark ? 'bg-gradient-to-br from-emerald-500 to-emerald-700 ring-slate-950' : 'bg-gradient-to-br from-emerald-400 to-emerald-600 ring-white'}`}
-          >
-            <Leaf size={26} className="text-white" />
-          </div>
+      <div className="absolute inset-0 flex items-center justify-center">
+        <div
+          className={`hub-pulse h-16 w-16 rounded-full flex items-center justify-center ring-4 ${dark ? 'bg-gradient-to-br from-emerald-500 to-emerald-700 ring-slate-950' : 'bg-gradient-to-br from-emerald-400 to-emerald-600 ring-white'}`}
+        >
+          <Leaf size={26} className="text-white" />
         </div>
       </div>
 
       <div
-        className={`float-card absolute top-1 left-0 rounded-xl border shadow-lg px-3 py-1.5 text-[11px] font-semibold flex items-center gap-1.5 ${dark ? 'bg-slate-900 border-slate-700 text-emerald-400' : 'bg-white border-slate-200 text-emerald-700'}`}
+        className={`float-card absolute -top-1 left-1/2 -translate-x-1/2 rounded-xl border shadow-lg px-3 py-1.5 text-[11px] font-semibold flex items-center gap-1.5 whitespace-nowrap ${dark ? 'bg-slate-900 border-slate-700 text-emerald-400' : 'bg-white border-slate-200 text-emerald-700'}`}
       >
-        <BadgeCheck size={13} /> Applied · Infosys
+        <BadgeCheck size={13} /> Verified listings
       </div>
       <div
-        className={`float-card float-card-delay absolute bottom-2 right-0 rounded-xl border shadow-lg px-3 py-1.5 text-[11px] font-semibold flex items-center gap-1.5 ${dark ? 'bg-slate-900 border-slate-700 text-amber-400' : 'bg-white border-slate-200 text-amber-700'}`}
+        className={`float-card float-card-delay absolute -bottom-1 left-1/2 -translate-x-1/2 rounded-xl border shadow-lg px-3 py-1.5 text-[11px] font-semibold flex items-center gap-1.5 whitespace-nowrap ${dark ? 'bg-slate-900 border-slate-700 text-amber-400' : 'bg-white border-slate-200 text-amber-700'}`}
       >
         <Bell size={13} /> New role synced
       </div>
@@ -929,22 +931,24 @@ export default function App() {
         {page === 'home' && (
           <>
             <section className={`relative overflow-hidden mb-8 rounded-3xl border p-6 sm:p-8 bg-gradient-to-br shadow-[0_1px_1px_rgba(0,0,0,0.03),0_20px_50px_-24px_rgba(15,23,42,0.35)] ${dark ? 'from-emerald-500/5 via-slate-950 to-indigo-500/5 border-slate-800' : 'from-emerald-50 via-white to-indigo-50 border-slate-200'}`}>
-              <div aria-hidden="true" className={`orbit-floor absolute -right-10 -top-10 h-72 w-72 rounded-full pointer-events-none ${dark ? 'text-slate-800' : 'text-slate-200'}`} style={{ opacity: 0.5 }} />
-              <div className="relative flex flex-col lg:flex-row lg:items-end justify-between gap-6 mb-6">
-                <div>
+              <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6 mb-6">
+                <div className="flex-1 min-w-0">
                   <div className="text-xs font-semibold text-emerald-600 uppercase tracking-widest mb-2">Fresher & experienced roles · Across India</div>
                   <h1 className={`font-display text-3xl sm:text-4xl font-extrabold leading-tight max-w-xl ${dark ? 'text-slate-50' : 'text-slate-900'}`}>New roles land here first. Yours could be next.</h1>
                   <p className={`mt-2 max-w-lg text-sm sm:text-base ${dark ? 'text-slate-400' : 'text-slate-600'}`}>Freshers to veterans, IT to everything else — filter it your way, then jump straight to the company's own site and apply. Always free.</p>
                 </div>
-                <JobOrbit dark={dark} />
-                <div className="flex gap-3 overflow-x-auto pb-1 lg:pb-0">
-                  <StatTile value={jobs.length} label="Live roles" dark={dark} />
-                  <StatTile value={jobs.filter((j) => j.daysAgo === 0).length} label="New today" dark={dark} />
-                  <StatTile value={COMPANIES.length} label="Employers" dark={dark} />
+                <div className="hidden lg:flex shrink-0 justify-center">
+                  <JobOrbit dark={dark} />
                 </div>
               </div>
 
-              <div className={card3D(dark, 'rounded-2xl p-3 sm:p-4')}>
+              <div className="relative z-10 flex gap-3 overflow-x-auto pb-1 mb-6">
+                <StatTile value={jobs.length} label="Live roles" dark={dark} />
+                <StatTile value={jobs.filter((j) => j.daysAgo === 0).length} label="New today" dark={dark} />
+                <StatTile value={COMPANIES.length} label="Employers" dark={dark} />
+              </div>
+
+              <div className={card3D(dark, 'relative z-10 rounded-2xl p-3 sm:p-4')}>
                 <div className="flex flex-col md:flex-row gap-3">
                   <div className="relative flex-1">
                     <Search size={16} className={`absolute left-3 top-1/2 -translate-y-1/2 ${dark ? 'text-slate-500' : 'text-slate-400'}`} />
