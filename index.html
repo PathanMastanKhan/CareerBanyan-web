@@ -22,8 +22,6 @@
       background-image: radial-gradient(currentColor 1px, transparent 1px);
       background-size: 22px 22px;
     }
-    .orbit-scene{ perspective: 1200px; }
-    .orbit-tilt{ transform: rotateX(52deg) rotateZ(0deg); transform-style: preserve-3d; }
     @keyframes orbitSpin { from{ transform: rotateZ(0deg); } to{ transform: rotateZ(360deg); } }
     @keyframes orbitSpinReverse { from{ transform: rotateZ(360deg); } to{ transform: rotateZ(0deg); } }
     .orbit-ring{ animation: orbitSpin 22s linear infinite; }
