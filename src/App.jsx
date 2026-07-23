@@ -622,6 +622,78 @@ function GoogleMark() {
   );
 }
 
+function GoogleConfirmModal({ email, onSendOtp, onVerifyOtp, dark }) {
+  const [sent, setSent] = useState(false);
+  const [code, setCode] = useState('');
+  const [error, setError] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [cooldown, setCooldown] = useState(0);
+  const firedRef = useRef(false);
+
+  const send = async () => {
+    setError('');
+    setBusy(true);
+    const res = await onSendOtp(email);
+    setBusy(false);
+    if (!res.ok) return setError(res.message);
+    setSent(true);
+    setCooldown(30);
+  };
+
+  useEffect(() => {
+    if (firedRef.current) return;
+    firedRef.current = true;
+    send();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    if (cooldown <= 0) return;
+    const t = window.setTimeout(() => setCooldown((c) => c - 1), 1000);
+    return () => window.clearTimeout(t);
+  }, [cooldown]);
+
+  const submit = async (e) => {
+    e.preventDefault();
+    if (!/^\d{4,8}$/.test(code.trim())) return setError('Enter the code exactly as you received it.');
+    setError('');
+    setBusy(true);
+    const res = await onVerifyOtp(code);
+    setBusy(false);
+    if (!res.ok) return setError(res.message);
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/70 backdrop-blur-sm">
+      <div className={`modal-pop-3d w-full max-w-md border rounded-2xl shadow-[0_40px_80px_-20px_rgba(0,0,0,0.5)] p-6 ${dark ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'}`}>
+        <h2 className={`font-display text-xl font-bold mb-1 ${dark ? 'text-slate-50' : 'text-slate-900'}`}>Confirm your email</h2>
+        <p className={`text-sm mb-4 ${dark ? 'text-slate-400' : 'text-slate-500'}`}>
+          {sent ? <>We sent a code to <strong className={dark ? 'text-slate-200' : 'text-slate-800'}>{email}</strong> — enter it below to continue.</> : 'Sending you a one-time code…'}
+        </p>
+        {error && <div className={`mb-4 text-sm rounded-lg px-3 py-2 border ${dark ? 'text-red-300 bg-red-500/10 border-red-900' : 'text-red-700 bg-red-50 border-red-200'}`}>{error}</div>}
+        <form className="space-y-3" onSubmit={submit}>
+          <Field label="Verification code" dark={dark}>
+            <input
+              value={code}
+              onChange={(e) => setCode(e.target.value.replace(/\D/g, ''))}
+              inputMode="numeric"
+              autoComplete="one-time-code"
+              disabled={!sent}
+              className={inputCls(dark) + ' tracking-[0.4em] text-center text-lg font-semibold disabled:opacity-50'}
+              placeholder="••••••"
+              maxLength={8}
+            />
+          </Field>
+          <button type="submit" disabled={busy || !sent} className={`w-full h-11 rounded-lg bg-emerald-600 text-white font-semibold hover:bg-emerald-700 disabled:opacity-60 disabled:translate-y-0 disabled:shadow-none ${btn3D(dark)}`}>{busy ? 'Verifying…' : 'Verify & continue'}</button>
+          <div className="flex items-center justify-end text-xs pt-1">
+            <button type="button" onClick={send} disabled={cooldown > 0 || busy} className={`disabled:opacity-50 ${dark ? 'text-emerald-400 hover:text-emerald-300' : 'text-emerald-700 hover:text-emerald-800'}`}>{cooldown > 0 ? `Resend code (${cooldown}s)` : 'Resend code'}</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
 function CompleteProfileModal({ initialName, initialPhone, initialAddress, onSubmit, onOpenTC, dark }) {
   const [name, setName] = useState(initialName || '');
   const [phone, setPhone] = useState(initialPhone || '');
@@ -779,14 +851,24 @@ export default function App() {
       address: meta.address || '',
       skills: skillsArr,
       savedJobIds: meta.saved_job_ids || [],
+      provider: session.user.app_metadata?.provider || 'email',
+      googleOtpConfirmed: !!meta.google_otp_confirmed,
     };
   }, [session]);
+
+  // Google already verifies the email address as part of its own login —
+  // this extra step is purely for consistency with the email-OTP path, not
+  // because Google's sign-in is any less trustworthy. Only applies once,
+  // right after a fresh Google login.
+  const needsGoogleOtpConfirm =
+    !!currentUser && currentUser.provider === 'google' && !currentUser.googleOtpConfirmed;
 
   // Email is verified via OTP at signup (see sendEmailOtp/verifyEmailOtp).
   // Phone is just a contact detail collected right after — no separate SMS
   // verification, since it's tied to the account by being saved against the
   // already-verified email identity.
-  const needsProfileCompletion = !!currentUser && (!currentUser.phone || !currentUser.hasName);
+  const needsProfileCompletion =
+    !!currentUser && !needsGoogleOtpConfirm && (!currentUser.phone || !currentUser.hasName);
 
   useEffect(() => {
     if (!currentUser && (page === 'saved' || page === 'profile')) setPage('home');
@@ -829,6 +911,21 @@ export default function App() {
     if (error) return { ok: false, message: 'That code is incorrect or expired — try again or resend it.' };
     setAuthModal(null);
     showToast('Welcome! You\'re verified and logged in.');
+    return { ok: true };
+  };
+
+  // Same OTP mechanics as email signup/login, but for the post-Google
+  // consistency step: confirms the code, then just flips a flag so this
+  // never has to happen again for this account. It doesn't create a new
+  // identity — verifyOtp resolves to the same Google-linked user since the
+  // email matches, so the person stays logged in exactly as they were.
+  const verifyGoogleOtp = async (code) => {
+    const { error: verifyError } = await supabase.auth.verifyOtp({ email: currentUser.email, token: code.trim(), type: 'email' });
+    if (verifyError) return { ok: false, message: 'That code is incorrect or expired — try again or resend it.' };
+    const meta = session.user.user_metadata || {};
+    const { data, error } = await supabase.auth.updateUser({ data: { ...meta, google_otp_confirmed: true } });
+    if (error) return { ok: false, message: 'Verified, but saving that failed — try again.' };
+    setSession((prev) => (prev ? { ...prev, user: data.user } : prev));
     return { ok: true };
   };
 
@@ -1209,6 +1306,14 @@ export default function App() {
         onOpenTC={() => setShowTC(true)}
         dark={dark}
       />
+      {needsGoogleOtpConfirm && (
+        <GoogleConfirmModal
+          email={currentUser.email}
+          onSendOtp={sendEmailOtp}
+          onVerifyOtp={verifyGoogleOtp}
+          dark={dark}
+        />
+      )}
       {needsProfileCompletion && (
         <CompleteProfileModal
           initialName={currentUser.hasName ? currentUser.name : ''}
