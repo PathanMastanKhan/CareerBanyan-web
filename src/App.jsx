@@ -394,15 +394,23 @@ function JobDetailModal({ job, saved, onToggleSave, onClose, currentUser, onRequ
   );
 }
 
-function AuthModal({ mode, onClose, onSwitch, onSignup, onLogin, onGoogle, error, onOpenTC, dark }) {
-  const [form, setForm] = useState({ name: '', email: '', password: '', confirm: '', agree: false });
-  const [loginForm, setLoginForm] = useState({ email: '', password: '' });
+function AuthModal({ mode, onClose, onSwitch, onSendOtp, onVerifyOtp, onGoogle, error, onOpenTC, dark }) {
+  const [step, setStep] = useState('email'); // 'email' | 'otp'
+  const [email, setEmail] = useState('');
+  const [agree, setAgree] = useState(false);
+  const [code, setCode] = useState('');
   const [busy, setBusy] = useState(false);
+  const [cooldown, setCooldown] = useState(0);
+  const [localError, setLocalError] = useState('');
 
   useEffect(() => {
-    setForm({ name: '', email: '', password: '', confirm: '', agree: false });
-    setLoginForm({ email: '', password: '' });
+    setStep('email');
+    setEmail('');
+    setAgree(false);
+    setCode('');
     setBusy(false);
+    setCooldown(0);
+    setLocalError('');
   }, [mode]);
 
   useEffect(() => {
@@ -411,62 +419,120 @@ function AuthModal({ mode, onClose, onSwitch, onSignup, onLogin, onGoogle, error
     return () => window.removeEventListener('keydown', onKey);
   }, [onClose]);
 
+  useEffect(() => {
+    if (cooldown <= 0) return;
+    const t = window.setTimeout(() => setCooldown((c) => c - 1), 1000);
+    return () => window.clearTimeout(t);
+  }, [cooldown]);
+
   if (!mode) return null;
   const isSignup = mode === 'signup';
   const panelBg = dark ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200';
+  const shownError = localError || error;
 
-  const submitSignup = async (e) => { e.preventDefault(); setBusy(true); await onSignup(form); setBusy(false); };
-  const submitLogin = async (e) => { e.preventDefault(); setBusy(true); await onLogin(loginForm); setBusy(false); };
+  const submitEmail = async (e) => {
+    e.preventDefault();
+    const cleanEmail = email.trim().toLowerCase();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanEmail)) return setLocalError('Enter a valid email address.');
+    if (isSignup && !agree) return setLocalError('Please accept the Terms & Conditions to continue.');
+    setLocalError('');
+    setBusy(true);
+    const res = await onSendOtp(cleanEmail);
+    setBusy(false);
+    if (!res.ok) return setLocalError(res.message);
+    setCode('');
+    setCooldown(30);
+    setStep('otp');
+  };
+
+  const resend = async () => {
+    if (cooldown > 0 || busy) return;
+    setLocalError('');
+    setBusy(true);
+    const res = await onSendOtp(email.trim().toLowerCase());
+    setBusy(false);
+    if (!res.ok) return setLocalError(res.message);
+    setCooldown(30);
+  };
+
+  const submitOtp = async (e) => {
+    e.preventDefault();
+    if (!/^\d{4,8}$/.test(code.trim())) return setLocalError('Enter the code exactly as you received it.');
+    setLocalError('');
+    setBusy(true);
+    const res = await onVerifyOtp(email.trim().toLowerCase(), code);
+    setBusy(false);
+    if (!res.ok) return setLocalError(res.message);
+  };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm" onClick={onClose}>
       <div className={`modal-pop-3d w-full max-w-md border rounded-2xl shadow-[0_40px_80px_-20px_rgba(0,0,0,0.5)] p-6 max-h-[90vh] overflow-y-auto ${panelBg}`} onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between mb-1">
-          <h2 className={`font-display text-xl font-bold ${dark ? 'text-slate-50' : 'text-slate-900'}`}>{isSignup ? 'Create your account' : 'Log in'}</h2>
+          <h2 className={`font-display text-xl font-bold ${dark ? 'text-slate-50' : 'text-slate-900'}`}>
+            {step === 'otp' ? 'Enter the code' : (isSignup ? 'Create your account' : 'Log in')}
+          </h2>
           <button onClick={onClose} aria-label="Close" className={`transition-transform active:scale-75 ${dark ? 'text-slate-500 hover:text-slate-200' : 'text-slate-400 hover:text-slate-700'}`}><X size={20} /></button>
         </div>
-        <p className={`text-sm mb-5 ${dark ? 'text-slate-400' : 'text-slate-500'}`}>{isSignup ? "Free to join — you'll need an account to apply to any role." : 'Welcome back — pick up your saved roles and matches.'}</p>
 
-        {error && <div className={`mb-4 text-sm rounded-lg px-3 py-2 border ${dark ? 'text-red-300 bg-red-500/10 border-red-900' : 'text-red-700 bg-red-50 border-red-200'}`}>{error}</div>}
+        {step === 'email' ? (
+          <>
+            <p className={`text-sm mb-5 ${dark ? 'text-slate-400' : 'text-slate-500'}`}>{isSignup ? "Free to join — no password needed. We'll email you a one-time code." : 'Welcome back — we\'ll email you a one-time code to log in.'}</p>
+            {shownError && <div className={`mb-4 text-sm rounded-lg px-3 py-2 border ${dark ? 'text-red-300 bg-red-500/10 border-red-900' : 'text-red-700 bg-red-50 border-red-200'}`}>{shownError}</div>}
 
-        <button
-          type="button"
-          onClick={onGoogle}
-          className={`w-full h-11 rounded-lg border font-semibold text-sm flex items-center justify-center gap-2 mb-4 transition-all duration-150 hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] ${dark ? 'border-slate-700 text-slate-200 hover:border-slate-600' : 'border-slate-300 text-slate-700 hover:border-slate-400'}`}
-        >
-          <GoogleMark /> Continue with Google
-        </button>
-        <div className={`flex items-center gap-3 mb-4 text-xs ${dark ? 'text-slate-500' : 'text-slate-400'}`}>
-          <div className={`flex-1 h-px ${dark ? 'bg-slate-800' : 'bg-slate-200'}`} />
-          <span>or use your email</span>
-          <div className={`flex-1 h-px ${dark ? 'bg-slate-800' : 'bg-slate-200'}`} />
-        </div>
+            <button
+              type="button"
+              onClick={onGoogle}
+              className={`w-full h-11 rounded-lg border font-semibold text-sm flex items-center justify-center gap-2 mb-4 transition-all duration-150 hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] ${dark ? 'border-slate-700 text-slate-200 hover:border-slate-600' : 'border-slate-300 text-slate-700 hover:border-slate-400'}`}
+            >
+              <GoogleMark /> Continue with Google
+            </button>
+            <div className={`flex items-center gap-3 mb-4 text-xs ${dark ? 'text-slate-500' : 'text-slate-400'}`}>
+              <div className={`flex-1 h-px ${dark ? 'bg-slate-800' : 'bg-slate-200'}`} />
+              <span>or use your email</span>
+              <div className={`flex-1 h-px ${dark ? 'bg-slate-800' : 'bg-slate-200'}`} />
+            </div>
 
-        {isSignup ? (
-          <form className="space-y-3" onSubmit={submitSignup}>
-            <Field label="Full name" dark={dark}><input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className={inputCls(dark)} placeholder="Priya Sharma" /></Field>
-            <Field label="Email" dark={dark}><input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} className={inputCls(dark)} placeholder="priya@example.com" /></Field>
-            <Field label="Password" dark={dark}><input type="password" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} className={inputCls(dark)} placeholder="At least 6 characters" /></Field>
-            <Field label="Confirm password" dark={dark}><input type="password" value={form.confirm} onChange={(e) => setForm({ ...form, confirm: e.target.value })} className={inputCls(dark)} placeholder="Re-enter password" /></Field>
-            <p className={`text-xs ${dark ? 'text-slate-500' : 'text-slate-400'}`}>We'll verify your mobile number by SMS right after this step.</p>
-            <label className={`flex items-start gap-2 text-xs pt-1 ${dark ? 'text-slate-400' : 'text-slate-500'}`}>
-              <input type="checkbox" checked={form.agree} onChange={(e) => setForm({ ...form, agree: e.target.checked })} className="mt-0.5" />
-              <span>I agree to the <button type="button" onClick={onOpenTC} className={dark ? 'text-emerald-400 underline underline-offset-2' : 'text-emerald-700 underline underline-offset-2'}>Terms & Conditions</button>, including storage of my email, phone number and address.</span>
-            </label>
-            <button type="submit" disabled={busy} className={`w-full h-11 rounded-lg bg-emerald-600 text-white font-semibold hover:bg-emerald-700 mt-2 disabled:opacity-60 disabled:translate-y-0 disabled:shadow-none ${btn3D(dark)}`}>{busy ? 'Creating account…' : 'Create account'}</button>
-          </form>
+            <form className="space-y-3" onSubmit={submitEmail}>
+              <Field label="Email" dark={dark}><input type="email" value={email} onChange={(e) => setEmail(e.target.value)} className={inputCls(dark)} placeholder="priya@example.com" /></Field>
+              {isSignup && (
+                <label className={`flex items-start gap-2 text-xs pt-1 ${dark ? 'text-slate-400' : 'text-slate-500'}`}>
+                  <input type="checkbox" checked={agree} onChange={(e) => setAgree(e.target.checked)} className="mt-0.5" />
+                  <span>I agree to the <button type="button" onClick={onOpenTC} className={dark ? 'text-emerald-400 underline underline-offset-2' : 'text-emerald-700 underline underline-offset-2'}>Terms & Conditions</button>, including storage of my email, phone number and address.</span>
+                </label>
+              )}
+              <button type="submit" disabled={busy} className={`w-full h-11 rounded-lg bg-emerald-600 text-white font-semibold hover:bg-emerald-700 mt-2 disabled:opacity-60 disabled:translate-y-0 disabled:shadow-none ${btn3D(dark)}`}>{busy ? 'Sending code…' : 'Send code'}</button>
+            </form>
+
+            <p className={`text-sm mt-4 text-center ${dark ? 'text-slate-400' : 'text-slate-500'}`}>
+              {isSignup ? 'Already have an account? ' : 'New here? '}
+              <button onClick={onSwitch} className={`font-medium hover:underline ${dark ? 'text-emerald-400' : 'text-emerald-700'}`}>{isSignup ? 'Log in instead' : 'Create an account'}</button>
+            </p>
+          </>
         ) : (
-          <form className="space-y-3" onSubmit={submitLogin}>
-            <Field label="Email" dark={dark}><input type="email" value={loginForm.email} onChange={(e) => setLoginForm({ ...loginForm, email: e.target.value })} className={inputCls(dark)} placeholder="priya@example.com" /></Field>
-            <Field label="Password" dark={dark}><input type="password" value={loginForm.password} onChange={(e) => setLoginForm({ ...loginForm, password: e.target.value })} className={inputCls(dark)} placeholder="Your password" /></Field>
-            <button type="submit" disabled={busy} className={`w-full h-11 rounded-lg bg-emerald-600 text-white font-semibold hover:bg-emerald-700 mt-2 disabled:opacity-60 disabled:translate-y-0 disabled:shadow-none ${btn3D(dark)}`}>{busy ? 'Logging in…' : 'Log in'}</button>
-          </form>
+          <>
+            <p className={`text-sm mb-5 ${dark ? 'text-slate-400' : 'text-slate-500'}`}>We sent a code to <strong className={dark ? 'text-slate-200' : 'text-slate-800'}>{email}</strong>.</p>
+            {shownError && <div className={`mb-4 text-sm rounded-lg px-3 py-2 border ${dark ? 'text-red-300 bg-red-500/10 border-red-900' : 'text-red-700 bg-red-50 border-red-200'}`}>{shownError}</div>}
+            <form className="space-y-3" onSubmit={submitOtp}>
+              <Field label="Verification code" dark={dark}>
+                <input
+                  value={code}
+                  onChange={(e) => setCode(e.target.value.replace(/\D/g, ''))}
+                  inputMode="numeric"
+                  autoComplete="one-time-code"
+                  className={inputCls(dark) + ' tracking-[0.4em] text-center text-lg font-semibold'}
+                  placeholder="••••••"
+                  maxLength={8}
+                />
+              </Field>
+              <button type="submit" disabled={busy} className={`w-full h-11 rounded-lg bg-emerald-600 text-white font-semibold hover:bg-emerald-700 disabled:opacity-60 disabled:translate-y-0 disabled:shadow-none ${btn3D(dark)}`}>{busy ? 'Verifying…' : 'Verify & continue'}</button>
+              <div className="flex items-center justify-between text-xs pt-1">
+                <button type="button" onClick={() => { setStep('email'); setLocalError(''); }} className={dark ? 'text-slate-400 hover:text-slate-200' : 'text-slate-500 hover:text-slate-700'}>Change email</button>
+                <button type="button" onClick={resend} disabled={cooldown > 0 || busy} className={`disabled:opacity-50 ${dark ? 'text-emerald-400 hover:text-emerald-300' : 'text-emerald-700 hover:text-emerald-800'}`}>{cooldown > 0 ? `Resend code (${cooldown}s)` : 'Resend code'}</button>
+              </div>
+            </form>
+          </>
         )}
-
-        <p className={`text-sm mt-4 text-center ${dark ? 'text-slate-400' : 'text-slate-500'}`}>
-          {isSignup ? 'Already have an account? ' : 'New here? '}
-          <button onClick={onSwitch} className={`font-medium hover:underline ${dark ? 'text-emerald-400' : 'text-emerald-700'}`}>{isSignup ? 'Log in' : 'Create one free'}</button>
-        </p>
       </div>
     </div>
   );
@@ -556,102 +622,46 @@ function GoogleMark() {
   );
 }
 
-function CompleteProfileModal({ initialPhone, initialAddress, onSendOtp, onVerifyOtp, onOpenTC, dark }) {
-  const [step, setStep] = useState('phone'); // 'phone' | 'otp'
+function CompleteProfileModal({ initialName, initialPhone, initialAddress, onSubmit, onOpenTC, dark }) {
+  const [name, setName] = useState(initialName || '');
   const [phone, setPhone] = useState(initialPhone || '');
   const [address, setAddress] = useState(initialAddress || '');
   const [agree, setAgree] = useState(false);
-  const [code, setCode] = useState('');
-  const [e164, setE164] = useState('');
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
-  const [cooldown, setCooldown] = useState(0);
 
-  useEffect(() => {
-    if (cooldown <= 0) return;
-    const t = window.setTimeout(() => setCooldown((c) => c - 1), 1000);
-    return () => window.clearTimeout(t);
-  }, [cooldown]);
-
-  const submitPhone = async (e) => {
+  const submit = async (e) => {
     e.preventDefault();
+    const cleanName = name.trim();
+    const cleanPhone = phone.trim();
     const cleanAddress = address.trim();
+    if (!cleanName) return setError('Please tell us your name.');
+    if (!/^(\+91[-\s]?)?[6-9]\d{9}$/.test(cleanPhone.replace(/\s+/g, ''))) return setError('Enter a valid 10-digit Indian mobile number.');
     if (!cleanAddress) return setError('Please add your address.');
     if (!agree) return setError('Please accept the Terms & Conditions to continue.');
     setError('');
     setBusy(true);
-    const res = await onSendOtp(phone);
+    const res = await onSubmit(cleanName, cleanPhone, cleanAddress);
     setBusy(false);
-    if (!res.ok) return setError(res.message);
-    setE164(res.e164);
-    setCode('');
-    setCooldown(30);
-    setStep('otp');
-  };
-
-  const resend = async () => {
-    if (cooldown > 0 || busy) return;
-    setError('');
-    setBusy(true);
-    const res = await onSendOtp(phone);
-    setBusy(false);
-    if (!res.ok) return setError(res.message);
-    setCooldown(30);
-  };
-
-  const submitOtp = async (e) => {
-    e.preventDefault();
-    if (!/^\d{4,8}$/.test(code.trim())) return setError('Enter the code exactly as you received it.');
-    setError('');
-    setBusy(true);
-    const res = await onVerifyOtp(e164, code, address);
-    setBusy(false);
-    if (!res.ok) return setError(res.message);
+    if (res && !res.ok) setError(res.message);
   };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/70 backdrop-blur-sm">
       <div className={`modal-pop-3d w-full max-w-md border rounded-2xl shadow-[0_40px_80px_-20px_rgba(0,0,0,0.5)] p-6 ${dark ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'}`}>
-        {step === 'phone' ? (
-          <>
-            <h2 className={`font-display text-xl font-bold mb-1 ${dark ? 'text-slate-50' : 'text-slate-900'}`}>Verify your mobile number</h2>
-            <p className={`text-sm mb-4 ${dark ? 'text-slate-400' : 'text-slate-500'}`}>We text a one-time code to confirm this number is really yours before it goes on your account.</p>
-            {error && <div className={`mb-4 text-sm rounded-lg px-3 py-2 border ${dark ? 'text-red-300 bg-red-500/10 border-red-900' : 'text-red-700 bg-red-50 border-red-200'}`}>{error}</div>}
-            <form className="space-y-3" onSubmit={submitPhone}>
-              <Field label="Mobile number" dark={dark}><input value={phone} onChange={(e) => setPhone(e.target.value)} className={inputCls(dark)} placeholder="98765 43210" /></Field>
-              <Field label="Address" dark={dark}><textarea value={address} onChange={(e) => setAddress(e.target.value)} rows={2} className={inputCls(dark) + ' resize-none'} placeholder="City, State" /></Field>
-              <label className={`flex items-start gap-2 text-xs pt-1 ${dark ? 'text-slate-400' : 'text-slate-500'}`}>
-                <input type="checkbox" checked={agree} onChange={(e) => setAgree(e.target.checked)} className="mt-0.5" />
-                <span>I agree to the <button type="button" onClick={onOpenTC} className={dark ? 'text-emerald-400 underline underline-offset-2' : 'text-emerald-700 underline underline-offset-2'}>Terms & Conditions</button>, including storage of my email, phone number and address.</span>
-              </label>
-              <button type="submit" disabled={busy} className={`w-full h-11 rounded-lg bg-emerald-600 text-white font-semibold hover:bg-emerald-700 disabled:opacity-60 disabled:translate-y-0 disabled:shadow-none ${btn3D(dark)}`}>{busy ? 'Sending code…' : 'Send verification code'}</button>
-            </form>
-          </>
-        ) : (
-          <>
-            <h2 className={`font-display text-xl font-bold mb-1 ${dark ? 'text-slate-50' : 'text-slate-900'}`}>Enter the code</h2>
-            <p className={`text-sm mb-4 ${dark ? 'text-slate-400' : 'text-slate-500'}`}>We sent a code by SMS to <strong className={dark ? 'text-slate-200' : 'text-slate-800'}>{e164}</strong>.</p>
-            {error && <div className={`mb-4 text-sm rounded-lg px-3 py-2 border ${dark ? 'text-red-300 bg-red-500/10 border-red-900' : 'text-red-700 bg-red-50 border-red-200'}`}>{error}</div>}
-            <form className="space-y-3" onSubmit={submitOtp}>
-              <Field label="Verification code" dark={dark}>
-                <input
-                  value={code}
-                  onChange={(e) => setCode(e.target.value.replace(/\D/g, ''))}
-                  inputMode="numeric"
-                  autoComplete="one-time-code"
-                  className={inputCls(dark) + ' tracking-[0.4em] text-center text-lg font-semibold'}
-                  placeholder="••••••"
-                  maxLength={8}
-                />
-              </Field>
-              <button type="submit" disabled={busy} className={`w-full h-11 rounded-lg bg-emerald-600 text-white font-semibold hover:bg-emerald-700 disabled:opacity-60 disabled:translate-y-0 disabled:shadow-none ${btn3D(dark)}`}>{busy ? 'Verifying…' : 'Verify & continue'}</button>
-              <div className="flex items-center justify-between text-xs pt-1">
-                <button type="button" onClick={() => { setStep('phone'); setError(''); }} className={dark ? 'text-slate-400 hover:text-slate-200' : 'text-slate-500 hover:text-slate-700'}>Change number</button>
-                <button type="button" onClick={resend} disabled={cooldown > 0 || busy} className={`disabled:opacity-50 ${dark ? 'text-emerald-400 hover:text-emerald-300' : 'text-emerald-700 hover:text-emerald-800'}`}>{cooldown > 0 ? `Resend code (${cooldown}s)` : 'Resend code'}</button>
-              </div>
-            </form>
-          </>
-        )}
+        <h2 className={`font-display text-xl font-bold mb-1 ${dark ? 'text-slate-50' : 'text-slate-900'}`}>Just one more thing</h2>
+        <p className={`text-sm mb-4 ${dark ? 'text-slate-400' : 'text-slate-500'}`}>A few details to finish setting up your account — these get saved against the email you just verified.</p>
+        {error && <div className={`mb-4 text-sm rounded-lg px-3 py-2 border ${dark ? 'text-red-300 bg-red-500/10 border-red-900' : 'text-red-700 bg-red-50 border-red-200'}`}>{error}</div>}
+        <form className="space-y-3" onSubmit={submit}>
+          <Field label="Full name" dark={dark}><input value={name} onChange={(e) => setName(e.target.value)} className={inputCls(dark)} placeholder="Priya Sharma" /></Field>
+          <Field label="Mobile number" dark={dark}><input value={phone} onChange={(e) => setPhone(e.target.value)} className={inputCls(dark)} placeholder="98765 43210" /></Field>
+          <Field label="Address" dark={dark}><textarea value={address} onChange={(e) => setAddress(e.target.value)} rows={2} className={inputCls(dark) + ' resize-none'} placeholder="City, State" /></Field>
+          <label className={`flex items-start gap-2 text-xs pt-1 ${dark ? 'text-slate-400' : 'text-slate-500'}`}>
+            <input type="checkbox" checked={agree} onChange={(e) => setAgree(e.target.checked)} className="mt-0.5" />
+            <span>I agree to the <button type="button" onClick={onOpenTC} className={dark ? 'text-emerald-400 underline underline-offset-2' : 'text-emerald-700 underline underline-offset-2'}>Terms & Conditions</button>, including storage of my email, phone number and address.</span>
+          </label>
+          <button type="submit" disabled={busy} className={`w-full h-11 rounded-lg bg-emerald-600 text-white font-semibold hover:bg-emerald-700 disabled:opacity-60 disabled:translate-y-0 disabled:shadow-none ${btn3D(dark)}`}>{busy ? 'Saving…' : 'Save and continue'}</button>
+        </form>
       </div>
     </div>
   );
@@ -764,18 +774,19 @@ export default function App() {
       id: session.user.id,
       email: session.user.email || '',
       name: meta.name || (session.user.email ? session.user.email.split('@')[0] : 'there'),
+      hasName: !!meta.name,
       phone: meta.phone || '',
-      phoneVerified: !!meta.phone_verified,
       address: meta.address || '',
       skills: skillsArr,
       savedJobIds: meta.saved_job_ids || [],
     };
   }, [session]);
 
-  // A profile only counts as "complete" once the phone number has actually
-  // been OTP-verified — not just typed in. This also re-prompts anyone
-  // whose number was accepted before verification existed.
-  const needsProfileCompletion = !!currentUser && !currentUser.phoneVerified;
+  // Email is verified via OTP at signup (see sendEmailOtp/verifyEmailOtp).
+  // Phone is just a contact detail collected right after — no separate SMS
+  // verification, since it's tied to the account by being saved against the
+  // already-verified email identity.
+  const needsProfileCompletion = !!currentUser && (!currentUser.phone || !currentUser.hasName);
 
   useEffect(() => {
     if (!currentUser && (page === 'saved' || page === 'profile')) setPage('home');
@@ -790,38 +801,6 @@ export default function App() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const handleSignup = async (form) => {
-    const name = form.name.trim();
-    const email = form.email.trim().toLowerCase();
-    const { password, confirm, agree } = form;
-
-    if (!name || !email || !password) return setAuthError('Please fill in every field.');
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return setAuthError('Enter a valid email address.');
-    if (password.length < 6) return setAuthError('Password should be at least 6 characters.');
-    if (password !== confirm) return setAuthError("Passwords don't match.");
-    if (!agree) return setAuthError('Please accept the Terms & Conditions to continue.');
-
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: { data: { name, skills: [], saved_job_ids: [] } },
-    });
-    if (error) return setAuthError(error.message);
-
-    setAuthError('');
-    setAuthModal(null);
-    showToast(`Welcome, ${name.split(' ')[0]}! Now let's verify your mobile number.`);
-  };
-
-  const handleLogin = async (form) => {
-    const email = form.email.trim().toLowerCase();
-    const { error } = await supabase.auth.signInWithPassword({ email, password: form.password });
-    if (error) return setAuthError('We could not log you in — check your email and password.');
-    setAuthError('');
-    setAuthModal(null);
-    showToast('Welcome back!');
-  };
-
   const signInWithGoogle = async () => {
     setAuthError('');
     const { error } = await supabase.auth.signInWithOAuth({
@@ -831,44 +810,42 @@ export default function App() {
     if (error) setAuthError(error.message);
   };
 
-  // Converts a loosely-formatted Indian mobile number into the E.164 shape
-  // Supabase's phone-OTP API expects (+91XXXXXXXXXX).
-  const toE164 = (raw) => {
-    const digits = raw.replace(/\D/g, '').replace(/^91/, '');
-    return `+91${digits}`;
-  };
-
-  // Step 1: send the OTP. Requires Phone auth + an SMS provider (Twilio,
-  // MessageBird, Vonage, etc.) to be configured in the Supabase dashboard —
-  // this call will fail with a clear Supabase error message if that isn't
-  // set up yet.
-  const sendPhoneOtp = async (phone) => {
-    const cleanPhone = phone.trim();
-    if (!/^(\+91[-\s]?)?[6-9]\d{9}$/.test(cleanPhone.replace(/\s+/g, ''))) {
-      return { ok: false, message: 'Enter a valid 10-digit Indian mobile number.' };
-    }
-    const e164 = toE164(cleanPhone);
-    const { error } = await supabase.auth.updateUser({ phone: e164 });
-    if (error) return { ok: false, message: error.message };
-    return { ok: true, e164 };
-  };
-
-  // Step 2: confirm the code the user received, then persist the verified
-  // phone + address to profile metadata.
-  const verifyPhoneOtp = async (e164, code, address) => {
-    const { error: verifyError } = await supabase.auth.verifyOtp({ phone: e164, token: code.trim(), type: 'phone_change' });
-    if (verifyError) return { ok: false, message: 'That code is incorrect or expired — try again or resend it.' };
-
-    const meta = session.user.user_metadata || {};
-    const { data, error } = await supabase.auth.updateUser({
-      data: { ...meta, phone: e164, address: address.trim(), phone_verified: true, name: meta.name || (session.user.email || '').split('@')[0] },
+  // Step 1: email OTP. shouldCreateUser lets this work for both signup
+  // (creates the account on first verify) and login (existing user just
+  // gets a fresh code) — Supabase treats both the same way here.
+  const sendEmailOtp = async (email) => {
+    const { error } = await supabase.auth.signInWithOtp({
+      email,
+      options: { shouldCreateUser: true },
     });
-    if (error) return { ok: false, message: 'Verified, but saving your profile failed — try again.' };
-    setSession((prev) => (prev ? { ...prev, user: data.user } : prev));
-    showToast('Mobile number verified — you\'re all set.');
+    if (error) return { ok: false, message: error.message };
     return { ok: true };
   };
 
+  // Step 2: confirm the code. On success Supabase sets a real session,
+  // which the onAuthStateChange listener below picks up automatically.
+  const verifyEmailOtp = async (email, code) => {
+    const { error } = await supabase.auth.verifyOtp({ email, token: code.trim(), type: 'email' });
+    if (error) return { ok: false, message: 'That code is incorrect or expired — try again or resend it.' };
+    setAuthModal(null);
+    showToast('Welcome! You\'re verified and logged in.');
+    return { ok: true };
+  };
+
+  // Runs after email verification (or Google login) whenever the profile
+  // is missing a name and/or phone number. Phone here is just a stored
+  // contact detail tied to the account — it rides along with the email
+  // identity that was already verified via OTP, no separate SMS step.
+  const completeProfile = async (name, phone, address) => {
+    const meta = session.user.user_metadata || {};
+    const { data, error } = await supabase.auth.updateUser({
+      data: { ...meta, name, phone, address },
+    });
+    if (error) return { ok: false, message: 'Could not save — try again.' };
+    setSession((prev) => (prev ? { ...prev, user: data.user } : prev));
+    showToast('Thanks — your profile is complete.');
+    return { ok: true };
+  };
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -1225,8 +1202,8 @@ export default function App() {
         mode={authModal}
         onClose={() => { setAuthModal(null); setAuthError(''); }}
         onSwitch={() => { setAuthError(''); setAuthModal((m) => (m === 'signup' ? 'login' : 'signup')); }}
-        onSignup={handleSignup}
-        onLogin={handleLogin}
+        onSendOtp={sendEmailOtp}
+        onVerifyOtp={verifyEmailOtp}
         onGoogle={signInWithGoogle}
         error={authError}
         onOpenTC={() => setShowTC(true)}
@@ -1234,10 +1211,10 @@ export default function App() {
       />
       {needsProfileCompletion && (
         <CompleteProfileModal
+          initialName={currentUser.hasName ? currentUser.name : ''}
           initialPhone={currentUser.phone}
           initialAddress={currentUser.address}
-          onSendOtp={sendPhoneOtp}
-          onVerifyOtp={verifyPhoneOtp}
+          onSubmit={completeProfile}
           onOpenTC={() => setShowTC(true)}
           dark={dark}
         />
