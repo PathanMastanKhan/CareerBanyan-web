@@ -2,6 +2,11 @@ import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import { Search, MapPin, Bookmark, LogOut, X, Menu, ExternalLink, Sparkles, ShieldCheck, Leaf, Sun, Moon, ChevronLeft, ChevronRight, Plus, Code2, Cpu, Wrench, Building2, FlaskConical, Briefcase, BadgeCheck, Bell } from 'lucide-react';
 import { supabase } from './supabaseClient';
 
+// Tracks which email GoogleConfirmModal has already auto-sent a code for
+// in this page session — survives React StrictMode's dev-only double-mount
+// since it lives on the module, not inside the component.
+let googleOtpAutoSent = null;
+
 function initials(name) {
   const clean = (name || '').replace(/\(.*?\)/g, '').trim();
   const words = clean.split(/\s+/).filter(Boolean);
@@ -628,7 +633,6 @@ function GoogleConfirmModal({ email, onSendOtp, onVerifyOtp, dark }) {
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
   const [cooldown, setCooldown] = useState(0);
-  const firedRef = useRef(false);
 
   const send = async () => {
     setError('');
@@ -641,8 +645,12 @@ function GoogleConfirmModal({ email, onSendOtp, onVerifyOtp, dark }) {
   };
 
   useEffect(() => {
-    if (firedRef.current) return;
-    firedRef.current = true;
+    // Module-level (not component-ref) guard: React's StrictMode
+    // deliberately mounts, unmounts, and remounts components once in dev,
+    // which recreates refs and would otherwise fire the auto-send twice for
+    // the same email — wasting a real SMTP send and showing two errors.
+    if (googleOtpAutoSent === email) return;
+    googleOtpAutoSent = email;
     send();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -900,7 +908,15 @@ export default function App() {
       email,
       options: { shouldCreateUser: true },
     });
-    if (error) return { ok: false, message: error.message };
+    if (error) {
+      // A bare 500 with no real detail (e.g. the SMTP provider rejected the
+      // send) can come back with an empty/unhelpful message — don't show
+      // the person a raw "{}" or blank string.
+      const message = error.message && error.message.trim() && error.message !== '{}'
+        ? error.message
+        : "Couldn't send the code — check that your email is allowed to receive mail from your SMTP provider yet, and try again.";
+      return { ok: false, message };
+    }
     return { ok: true };
   };
 
