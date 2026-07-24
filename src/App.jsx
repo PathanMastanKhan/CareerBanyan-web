@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
-import { Search, MapPin, Bookmark, LogOut, X, Menu, ExternalLink, Sparkles, ShieldCheck, Leaf, Sun, Moon, ChevronLeft, ChevronRight, Plus, Code2, Cpu, Wrench, Building2, FlaskConical, Briefcase, BadgeCheck, Bell } from 'lucide-react';
+import { Search, MapPin, Bookmark, LogOut, X, Menu, ExternalLink, Sparkles, ShieldCheck, Leaf, Sun, Moon, ChevronLeft, ChevronRight, Plus, Code2, Cpu, Wrench, Building2, FlaskConical, Briefcase, BadgeCheck, Bell, SlidersHorizontal, GraduationCap, RotateCcw } from 'lucide-react';
 import { supabase } from './supabaseClient';
 
 // Tracks which email GoogleConfirmModal has already auto-sent a code for
@@ -15,8 +15,79 @@ function initials(name) {
   return words.map((w) => w[0]).join('').slice(0, 4).toUpperCase();
 }
 
-function matchScore(job, tokens) {
+// Major fields of study Indian students commonly pursue, shown as Category
+// filter options even before any live job in that field exists — merged
+// with whatever categories are actually present in the data (see CATEGORIES
+// memo further down).
+const EDUCATION_CATEGORIES = [
+  'Computer Science (CSE)',
+  'Information Technology (IT)',
+  'Electronics & Communication (ECE)',
+  'Electrical & Electronics (EEE)',
+  'Mechanical Engineering',
+  'Civil Engineering',
+  'Chemical Engineering',
+  'AI & Machine Learning',
+  'Data Science',
+  'BBA / Business Administration',
+  'MBA / Management',
+  'B.Com / Commerce',
+  'BA / Arts & Humanities',
+  'B.Sc / Science',
+  'B.Pharmacy / Pharmacy',
+  'Law (LLB / LLM)',
+  'Medical (MBBS / BDS)',
+  'Nursing',
+  'B.Ed / Teaching',
+  'Hotel Management',
+  'CA / CS / CMA',
+  'Diploma / ITI',
+  'Other',
+];
+
+// Lets a search for a common abbreviation also match its full name, and
+// vice versa — e.g. searching "mba" also finds "management", "law" also
+// finds "llb".
+const CATEGORY_ALIASES = [
+  ['cse', 'computer science', 'software'],
+  ['it', 'information technology'],
+  ['ece', 'electronics', 'electronics and communication'],
+  ['eee', 'electrical'],
+  ['mech', 'mechanical'],
+  ['civil'],
+  ['chemical', 'chem'],
+  ['ai', 'ml', 'artificial intelligence', 'machine learning'],
+  ['data science', 'data analytics'],
+  ['bba', 'business administration'],
+  ['mba', 'management'],
+  ['bcom', 'b.com', 'commerce'],
+  ['ba', 'arts', 'humanities'],
+  ['bsc', 'b.sc', 'science'],
+  ['bpharm', 'b.pharmacy', 'pharmacy', 'pharma'],
+  ['law', 'llb', 'llm', 'legal'],
+  ['mbbs', 'bds', 'medical', 'doctor'],
+  ['nursing', 'nurse'],
+  ['bed', 'b.ed', 'teaching', 'teacher'],
+  ['hotel management', 'hospitality'],
+  ['ca', 'cs', 'cma', 'chartered accountant'],
+  ['diploma', 'iti'],
+];
+
+function expandCategoryTokens(tokens) {
+  const expanded = new Set(tokens);
+  tokens.forEach((t) => {
+    CATEGORY_ALIASES.forEach((group) => {
+      if (group.some((alias) => alias === t || alias.includes(t) || t.includes(alias))) {
+        group.forEach((alias) => expanded.add(alias));
+      }
+    });
+  });
+  return Array.from(expanded);
+}
+
+function matchScore(job, rawTokens) {
   let score = 0;
+  const tokens = expandCategoryTokens(rawTokens);
   const role = job.role.toLowerCase();
   const category = (job.category || '').toLowerCase();
   const skillsLower = (job.skills || []).map((s) => s.toLowerCase());
@@ -30,6 +101,8 @@ function matchScore(job, tokens) {
 
 const inputCls = (dark) => `w-full h-10 px-3 rounded-lg border text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 ${dark ? 'bg-slate-900 border-slate-700 text-slate-50 placeholder-slate-500' : 'bg-white border-slate-300 text-slate-900 placeholder-slate-400'}`;
 const selectCls = (dark) => `h-11 px-3 rounded-xl border text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 md:w-48 ${dark ? 'bg-slate-900 border-slate-700 text-slate-200' : 'bg-white border-slate-300 text-slate-700'}`;
+const selectClsFull = (dark) => `w-full h-11 px-3 rounded-xl border text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 ${dark ? 'bg-slate-900 border-slate-700 text-slate-200' : 'bg-white border-slate-300 text-slate-700'}`;
+const filterLabelCls = (dark) => `block text-[11px] uppercase tracking-wide font-semibold mb-1.5 ${dark ? 'text-slate-500' : 'text-slate-400'}`;
 
 // ---- Site-wide 3D language --------------------------------------------
 // Every raised surface (cards, panels, modals) uses the same layered
@@ -147,6 +220,110 @@ function useTilt() {
   };
 
   return { ref, tiltStyle, onMouseMove, onMouseLeave };
+}
+
+function FilterPanel({ filters, setFilter, clearFilters, activeFilterCount, LOCATIONS, CATEGORIES, dark, onClose }) {
+  const pill = (active) => `shrink-0 h-9 px-3.5 rounded-full text-sm font-medium border transition-all duration-150 hover:-translate-y-0.5 active:translate-y-0 active:scale-95 ${active ? 'bg-emerald-600 text-white border-emerald-600 shadow-[0_3px_0_0_rgba(4,120,87,1)]' : (dark ? 'border-slate-700 text-slate-300 hover:border-slate-600' : 'border-slate-200 text-slate-600 hover:border-slate-300')}`;
+
+  return (
+    <div className={card3D(dark, 'rounded-2xl p-4 sm:p-5')}>
+      <div className="flex items-center justify-between mb-4">
+        <h3 className={`font-display font-bold text-base flex items-center gap-2 ${dark ? 'text-slate-100' : 'text-slate-900'}`}>
+          <SlidersHorizontal size={16} className="text-emerald-600" /> Filters
+          {activeFilterCount > 0 && (
+            <span className="inline-flex items-center justify-center h-5 min-w-5 px-1 rounded-full bg-emerald-600 text-white text-[11px] font-bold">{activeFilterCount}</span>
+          )}
+        </h3>
+        <div className="flex items-center gap-3">
+          {activeFilterCount > 0 && (
+            <button onClick={clearFilters} className={`text-xs font-semibold flex items-center gap-1 transition-transform active:scale-95 ${dark ? 'text-emerald-400 hover:text-emerald-300' : 'text-emerald-700 hover:text-emerald-800'}`}>
+              <RotateCcw size={12} /> Clear all
+            </button>
+          )}
+          {onClose && (
+            <button onClick={onClose} aria-label="Close filters" className={`lg:hidden transition-transform active:scale-75 ${dark ? 'text-slate-400' : 'text-slate-500'}`}><X size={18} /></button>
+          )}
+        </div>
+      </div>
+
+      <div className="space-y-4">
+        <div>
+          <label className={filterLabelCls(dark)}>Search</label>
+          <div className="relative">
+            <Search size={15} className={`absolute left-3 top-1/2 -translate-y-1/2 ${dark ? 'text-slate-500' : 'text-slate-400'}`} />
+            <input
+              value={filters.q}
+              onChange={(e) => setFilter({ q: e.target.value })}
+              placeholder="Role, company or skill…"
+              className={inputCls(dark) + ' h-11 pl-9 pr-3 rounded-xl'}
+            />
+          </div>
+        </div>
+
+        <div>
+          <label className={filterLabelCls(dark)}>Location</label>
+          <select value={filters.loc} onChange={(e) => setFilter({ loc: e.target.value })} className={selectClsFull(dark)}>
+            <option>All Locations</option>
+            {LOCATIONS.map((l) => <option key={l}>{l}</option>)}
+          </select>
+        </div>
+
+        <div>
+          <label className={filterLabelCls(dark)}>Category / Education</label>
+          <select value={filters.cat} onChange={(e) => setFilter({ cat: e.target.value })} className={selectClsFull(dark)}>
+            <option>All Categories</option>
+            {CATEGORIES.map((c) => <option key={c}>{c}</option>)}
+          </select>
+        </div>
+
+        <div>
+          <label className={filterLabelCls(dark)}>Domain</label>
+          <div className="flex flex-wrap gap-2">
+            {[['all', 'All roles'], ['it', 'IT roles'], ['nonit', 'Non-IT roles']].map(([val, label]) => (
+              <button key={val} onClick={() => setFilter({ domain: val })} className={pill(filters.domain === val)}>{label}</button>
+            ))}
+          </div>
+        </div>
+
+        <div>
+          <label className={filterLabelCls(dark)}>Experience level</label>
+          <div className="flex flex-wrap gap-2">
+            {[['all', 'All levels'], ['fresher', 'Freshers'], ['experienced', 'Experienced']].map(([val, label]) => (
+              <button key={val} onClick={() => setFilter({ level: val, eduYear: 'All Years', expYears: 'Any' })} className={pill(filters.level === val)}>{label}</button>
+            ))}
+          </div>
+        </div>
+
+        {filters.level === 'fresher' && (
+          <div className="fade-in">
+            <label className={filterLabelCls(dark) + ' flex items-center gap-1.5'}><GraduationCap size={13} /> Which year are you in?</label>
+            <select value={filters.eduYear} onChange={(e) => setFilter({ eduYear: e.target.value })} className={selectClsFull(dark)}>
+              <option>All Years</option>
+              <option>1st Year</option>
+              <option>2nd Year</option>
+              <option>3rd Year</option>
+              <option>Final Year</option>
+              <option>Already Graduated</option>
+            </select>
+            <p className={`text-[11px] mt-1.5 ${dark ? 'text-slate-500' : 'text-slate-400'}`}>1st–3rd year shows internships; Final Year / Graduated shows full-time fresher roles.</p>
+          </div>
+        )}
+
+        {filters.level === 'experienced' && (
+          <div className="fade-in">
+            <label className={filterLabelCls(dark)}>Years of experience</label>
+            <select value={filters.expYears} onChange={(e) => setFilter({ expYears: e.target.value })} className={selectClsFull(dark)}>
+              <option>Any</option>
+              <option>0-2 Years</option>
+              <option>2-5 Years</option>
+              <option>5-10 Years</option>
+              <option>10+ Years</option>
+            </select>
+          </div>
+        )}
+      </div>
+    </div>
+  );
 }
 
 function JobOrbit({ dark }) {
@@ -773,14 +950,11 @@ export default function App() {
   const [mobileNav, setMobileNav] = useState(false);
   const [toast, setToast] = useState(null);
   const [openJobId, setOpenJobId] = useState(null);
-  const [draftFilters, setDraftFilters] = useState({ level: 'all', domain: 'all', q: '', loc: 'All Locations', cat: 'All Categories' });
-  const [filters, setFilters] = useState({ level: 'all', domain: 'all', q: '', loc: 'All Locations', cat: 'All Categories' });
-  const applyFilters = () => setFilters(draftFilters);
-  const clearFilters = () => {
-    const reset = { level: 'all', domain: 'all', q: '', loc: 'All Locations', cat: 'All Categories' };
-    setDraftFilters(reset);
-    setFilters(reset);
-  };
+  const [filtersOpen, setFiltersOpen] = useState(false);
+  const DEFAULT_FILTERS = { level: 'all', domain: 'all', q: '', loc: 'All Locations', cat: 'All Categories', eduYear: 'All Years', expYears: 'Any' };
+  const [filters, setFilters] = useState(DEFAULT_FILTERS);
+  const setFilter = (patch) => setFilters((f) => ({ ...f, ...patch }));
+  const clearFilters = () => setFilters(DEFAULT_FILTERS);
   const toastTimer = useRef(null);
 
   const [theme, setThemeState] = useState(() => {
@@ -1008,8 +1182,23 @@ export default function App() {
   };
 
   const LOCATIONS = useMemo(() => Array.from(new Set(jobs.map((j) => j.city))).sort(), [jobs]);
-  const CATEGORIES = useMemo(() => Array.from(new Set(jobs.map((j) => j.category))).sort(), [jobs]);
+  const CATEGORIES = useMemo(() => {
+    const live = jobs.map((j) => j.category).filter(Boolean);
+    return Array.from(new Set([...EDUCATION_CATEGORIES, ...live])).sort();
+  }, [jobs]);
   const COMPANIES = useMemo(() => Array.from(new Set(jobs.map((j) => j.company))), [jobs]);
+
+  const activeFilterCount = useMemo(() => {
+    let n = 0;
+    if (filters.q.trim()) n++;
+    if (filters.domain !== 'all') n++;
+    if (filters.level !== 'all') n++;
+    if (filters.loc !== 'All Locations') n++;
+    if (filters.cat !== 'All Categories') n++;
+    if (filters.level === 'fresher' && filters.eduYear !== 'All Years') n++;
+    if (filters.level === 'experienced' && filters.expYears !== 'Any') n++;
+    return n;
+  }, [filters]);
 
   const filteredJobs = useMemo(() => {
     const q = filters.q.trim().toLowerCase();
@@ -1019,10 +1208,29 @@ export default function App() {
       if (filters.domain === 'nonit' && job.isIT) return false;
       if (filters.loc !== 'All Locations' && job.city !== filters.loc) return false;
       if (filters.cat !== 'All Categories' && job.category !== filters.cat) return false;
+
+      // College-year sub-filter (only meaningful once "Fresher" is picked):
+      // earlier-year students are realistically only eligible for
+      // internships, so this maps onto the employment-type field that
+      // already exists rather than data we don't have.
+      if (filters.level === 'fresher' && filters.eduYear !== 'All Years') {
+        const isIntern = (job.employmentType || '').toLowerCase().includes('intern');
+        if (['1st Year', '2nd Year', '3rd Year'].includes(filters.eduYear) && !isIntern) return false;
+        if (['Final Year', 'Already Graduated'].includes(filters.eduYear) && isIntern) return false;
+      }
+
+      // Years-of-experience sub-filter (only once "Experienced" is picked):
+      // maps onto the existing free-text experience field's ranges.
+      if (filters.level === 'experienced' && filters.expYears !== 'Any') {
+        const exp = (job.experience || '').toLowerCase();
+        const bucket = { '0-2 years': ['0-2', 'fresher'], '2-5 years': ['2-5', '2-4', '3-5'], '5-10 years': ['5-10', '5+', '5-8'], '10+ years': ['10+', '10-'] }[filters.expYears.toLowerCase()] || [];
+        if (bucket.length && !bucket.some((b) => exp.includes(b))) return false;
+      }
+
       if (q) {
-        const tokens = q.split(/[\s,]+/).filter(Boolean);
+        const words = q.split(/[\s,]+/).filter(Boolean);
         const hay = `${job.company} ${job.role} ${job.category} ${job.city} ${job.skills.join(' ')}`.toLowerCase();
-        const matchesAll = tokens.every((t) => hay.includes(t));
+        const matchesAll = words.every((w) => expandCategoryTokens([w]).some((alias) => hay.includes(alias)));
         if (!matchesAll) return false;
       }
       return true;
@@ -1110,118 +1318,119 @@ export default function App() {
       <main className="max-w-6xl mx-auto px-4 sm:px-6 py-8">
         {page === 'home' && (
           <>
-            <section className={`relative overflow-hidden mb-8 rounded-3xl border p-6 sm:p-8 bg-gradient-to-br shadow-[0_1px_1px_rgba(0,0,0,0.03),0_20px_50px_-24px_rgba(15,23,42,0.35)] ${dark ? 'from-emerald-500/5 via-slate-950 to-indigo-500/5 border-slate-800' : 'from-emerald-50 via-white to-indigo-50 border-slate-200'}`}>
+            <section className={`relative overflow-hidden mb-6 rounded-3xl border p-6 sm:p-8 bg-gradient-to-br shadow-[0_1px_1px_rgba(0,0,0,0.03),0_20px_50px_-24px_rgba(15,23,42,0.35)] ${dark ? 'from-emerald-500/5 via-slate-950 to-indigo-500/5 border-slate-800' : 'from-emerald-50 via-white to-indigo-50 border-slate-200'}`}>
               <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6 mb-6">
                 <div className="flex-1 min-w-0">
                   <div className="text-xs font-semibold text-emerald-600 uppercase tracking-widest mb-2">Fresher & experienced roles · Across India</div>
                   <h1 className={`font-display text-3xl sm:text-4xl font-extrabold leading-tight max-w-xl ${dark ? 'text-slate-50' : 'text-slate-900'}`}>New roles land here first. Yours could be next.</h1>
-                  <p className={`mt-2 max-w-lg text-sm sm:text-base ${dark ? 'text-slate-400' : 'text-slate-600'}`}>Freshers to veterans, IT to everything else — filter it your way, then jump straight to the company's own site and apply. Always free.</p>
+                  <p className={`mt-2 max-w-lg text-sm sm:text-base ${dark ? 'text-slate-400' : 'text-slate-600'}`}>Engineering, management, law, medicine and everything between — filter it your way, then jump straight to the company's own site and apply. Always free.</p>
                 </div>
                 <div className="hidden lg:flex shrink-0 justify-center">
                   <JobOrbit dark={dark} />
                 </div>
               </div>
 
-              <div className="relative z-10 flex gap-3 overflow-x-auto pb-1 mb-6">
+              <div className="relative z-10 flex gap-3 overflow-x-auto pb-1">
                 <StatTile value={jobs.length} label="Live roles" dark={dark} />
                 <StatTile value={jobs.filter((j) => j.daysAgo === 0).length} label="New today" dark={dark} />
                 <StatTile value={COMPANIES.length} label="Employers" dark={dark} />
               </div>
-
-              <div className={card3D(dark, 'relative z-10 rounded-2xl p-3 sm:p-4')}>
-                <div className="flex flex-col md:flex-row gap-3">
-                  <div className="relative flex-1">
-                    <Search size={16} className={`absolute left-3 top-1/2 -translate-y-1/2 ${dark ? 'text-slate-500' : 'text-slate-400'}`} />
-                    <input
-                      value={draftFilters.q}
-                      onChange={(e) => setDraftFilters((f) => ({ ...f, q: e.target.value }))}
-                      onKeyDown={(e) => { if (e.key === 'Enter') applyFilters(); }}
-                      placeholder="Search role, company or skill…"
-                      className={inputCls(dark) + ' h-11 pl-9 pr-3 rounded-xl'}
-                    />
-                  </div>
-                  <select value={draftFilters.loc} onChange={(e) => setDraftFilters((f) => ({ ...f, loc: e.target.value }))} className={selectCls(dark)}>
-                    <option>All Locations</option>
-                    {LOCATIONS.map((l) => <option key={l}>{l}</option>)}
-                  </select>
-                  <select value={draftFilters.cat} onChange={(e) => setDraftFilters((f) => ({ ...f, cat: e.target.value }))} className={selectCls(dark)}>
-                    <option>All Categories</option>
-                    {CATEGORIES.map((c) => <option key={c}>{c}</option>)}
-                  </select>
-                  <button onClick={applyFilters} className={`h-11 px-6 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-sm shrink-0 flex items-center justify-center gap-2 ${btn3D(dark)}`}>
-                    <Search size={15} /> Search
-                  </button>
-                </div>
-
-                <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div className={`rounded-xl border p-3 shadow-[inset_0_1px_3px_rgba(0,0,0,0.06)] ${dark ? 'border-slate-800 bg-slate-800/30' : 'border-slate-100 bg-slate-50'}`}>
-                    <div className={`text-[11px] uppercase tracking-wide font-semibold mb-2 ${dark ? 'text-slate-500' : 'text-slate-400'}`}>Role type</div>
-                    <div className="no-scrollbar flex gap-2 overflow-x-auto pb-1">
-                      {[['all', 'All roles'], ['it', 'IT roles'], ['nonit', 'Non-IT roles']].map(([val, label]) => (
-                        <button key={val} onClick={() => setDraftFilters((f) => ({ ...f, domain: val }))} className={`shrink-0 h-9 px-4 rounded-full text-sm font-medium border transition-all duration-150 hover:-translate-y-0.5 active:translate-y-0 active:scale-95 ${draftFilters.domain === val ? 'bg-emerald-600 text-white border-emerald-600 shadow-[0_3px_0_0_rgba(4,120,87,1)]' : (dark ? 'border-slate-700 text-slate-300 hover:border-slate-600' : 'border-slate-200 text-slate-600 hover:border-slate-300')}`}>{label}</button>
-                      ))}
-                    </div>
-                  </div>
-                  <div className={`rounded-xl border p-3 shadow-[inset_0_1px_3px_rgba(0,0,0,0.06)] ${dark ? 'border-slate-800 bg-slate-800/30' : 'border-slate-100 bg-slate-50'}`}>
-                    <div className={`text-[11px] uppercase tracking-wide font-semibold mb-2 ${dark ? 'text-slate-500' : 'text-slate-400'}`}>Experience level</div>
-                    <div className="no-scrollbar flex gap-2 overflow-x-auto pb-1">
-                      {[['all', 'All levels'], ['fresher', 'Freshers'], ['experienced', 'Experienced']].map(([val, label]) => (
-                        <button key={val} onClick={() => setDraftFilters((f) => ({ ...f, level: val }))} className={`shrink-0 h-9 px-4 rounded-full text-sm font-medium border transition-all duration-150 hover:-translate-y-0.5 active:translate-y-0 active:scale-95 ${draftFilters.level === val ? 'bg-emerald-600 text-white border-emerald-600 shadow-[0_3px_0_0_rgba(4,120,87,1)]' : (dark ? 'border-slate-700 text-slate-300 hover:border-slate-600' : 'border-slate-200 text-slate-600 hover:border-slate-300')}`}>{label}</button>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              </div>
             </section>
 
-            {jobsLoading ? (
-              <div className={`text-center py-16 border border-dashed rounded-2xl ${dark ? 'border-slate-700 bg-slate-900' : 'border-slate-300 bg-white'}`}>
-                <p className={dark ? 'text-slate-300' : 'text-slate-600'}>Loading roles…</p>
-              </div>
-            ) : jobs.length === 0 ? (
-              <div className={`text-center py-16 border border-dashed rounded-2xl ${dark ? 'border-slate-700 bg-slate-900' : 'border-slate-300 bg-white'}`}>
-                <p className={dark ? 'text-slate-200 font-medium' : 'text-slate-700 font-medium'}>No roles yet.</p>
-                <p className={`text-sm mt-1 ${dark ? 'text-slate-500' : 'text-slate-400'}`}>The daily sync hasn't populated any jobs yet — trigger it manually from your GitHub repo's Actions tab, then refresh this page.</p>
-              </div>
-            ) : (
-              <>
-                {recommended.length > 0 && (
-                  <section className="mb-8">
-                    <div className="flex items-center gap-2 mb-3 flex-wrap">
-                      <Sparkles size={16} className="text-emerald-600" />
-                      <h2 className={`font-display font-bold text-lg ${dark ? 'text-slate-100' : 'text-slate-900'}`}>Matched for you</h2>
-                      <span className={`text-xs ${dark ? 'text-slate-500' : 'text-slate-500'}`}>based on the skills saved in your profile</span>
-                    </div>
-                    <Carousel dark={dark} items={recommended} renderItem={(job) => <JobCard {...jobCardProps(job, true)} />} />
-                  </section>
-                )}
-                {currentUser && recommended.length === 0 && (
-                  <div className={`mb-8 border rounded-xl px-4 py-3 text-sm ${dark ? 'border-slate-800 bg-slate-900 text-slate-400' : 'border-slate-200 bg-white text-slate-500'}`}>
-                    Add a few skills in <button onClick={() => setPage('profile')} className={dark ? 'text-emerald-400 underline underline-offset-2' : 'text-emerald-700 underline underline-offset-2'}>your profile</button> and we'll match roles to you here.
-                  </div>
-                )}
+            {/* Mobile filter trigger — the full panel lives in <aside> below,
+                shown as a static sidebar on desktop and a slide-in drawer here. */}
+            <button
+              onClick={() => setFiltersOpen(true)}
+              className={`lg:hidden w-full mb-6 h-12 px-4 rounded-xl border font-semibold text-sm flex items-center justify-center gap-2 transition-all duration-150 active:scale-[0.98] ${btn3D(dark, 'slate')} ${dark ? 'bg-slate-900 border-slate-700 text-slate-100' : 'bg-white border-slate-200 text-slate-800'}`}
+            >
+              <SlidersHorizontal size={16} /> Filters
+              {activeFilterCount > 0 && (
+                <span className="inline-flex items-center justify-center h-5 min-w-5 px-1 rounded-full bg-emerald-600 text-white text-[11px] font-bold">{activeFilterCount}</span>
+              )}
+            </button>
 
-                <section>
-                  <div className="flex items-center justify-between mb-3">
-                    <h2 className={`font-display font-bold text-lg ${dark ? 'text-slate-100' : 'text-slate-900'}`}>
-                      {filters.domain === 'it' ? 'IT roles' : filters.domain === 'nonit' ? 'Non-IT roles' : 'All roles'} <span className={`font-normal text-sm ${dark ? 'text-slate-500' : 'text-slate-400'}`}>({filteredJobs.length})</span>
-                    </h2>
-                    <span className={`text-xs hidden sm:inline ${dark ? 'text-slate-500' : 'text-slate-400'}`}>Sorted by newest first</span>
+            <div className="lg:grid lg:grid-cols-[280px_1fr] lg:gap-6 lg:items-start">
+              <aside className="hidden lg:block lg:sticky lg:top-20">
+                <FilterPanel
+                  filters={filters}
+                  setFilter={setFilter}
+                  clearFilters={clearFilters}
+                  activeFilterCount={activeFilterCount}
+                  LOCATIONS={LOCATIONS}
+                  CATEGORIES={CATEGORIES}
+                  dark={dark}
+                />
+              </aside>
+
+              {filtersOpen && (
+                <div className="lg:hidden fixed inset-0 z-50 flex">
+                  <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={() => setFiltersOpen(false)} />
+                  <div className="modal-pop-3d relative w-[85vw] max-w-xs h-full overflow-y-auto p-4">
+                    <FilterPanel
+                      filters={filters}
+                      setFilter={setFilter}
+                      clearFilters={clearFilters}
+                      activeFilterCount={activeFilterCount}
+                      LOCATIONS={LOCATIONS}
+                      CATEGORIES={CATEGORIES}
+                      dark={dark}
+                      onClose={() => setFiltersOpen(false)}
+                    />
                   </div>
-                  {filteredJobs.length === 0 ? (
-                    <div className={`text-center py-16 border border-dashed rounded-2xl ${dark ? 'border-slate-700 bg-slate-900' : 'border-slate-300 bg-white'}`}>
-                      <p className={dark ? 'text-slate-200 font-medium' : 'text-slate-700 font-medium'}>No roles match these filters yet.</p>
-                      <p className={`text-sm mt-1 ${dark ? 'text-slate-500' : 'text-slate-400'}`}>Try clearing a filter, or check back after the next sync.</p>
-                      <button onClick={clearFilters} className={`mt-4 h-9 px-4 rounded-lg border text-sm transition-all duration-150 hover:-translate-y-0.5 active:translate-y-0 active:scale-95 ${dark ? 'border-slate-700 text-slate-300 hover:border-slate-600' : 'border-slate-200 text-slate-600 hover:border-slate-300'}`}>Clear filters</button>
-                    </div>
-                  ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {filteredJobs.map((job) => <JobCard key={job.id} {...jobCardProps(job, false)} />)}
-                    </div>
-                  )}
-                </section>
-              </>
-            )}
+                </div>
+              )}
+
+              <div className="min-w-0">
+                {jobsLoading ? (
+                  <div className={`text-center py-16 border border-dashed rounded-2xl ${dark ? 'border-slate-700 bg-slate-900' : 'border-slate-300 bg-white'}`}>
+                    <p className={dark ? 'text-slate-300' : 'text-slate-600'}>Loading roles…</p>
+                  </div>
+                ) : jobs.length === 0 ? (
+                  <div className={`text-center py-16 border border-dashed rounded-2xl ${dark ? 'border-slate-700 bg-slate-900' : 'border-slate-300 bg-white'}`}>
+                    <p className={dark ? 'text-slate-200 font-medium' : 'text-slate-700 font-medium'}>No roles yet.</p>
+                    <p className={`text-sm mt-1 ${dark ? 'text-slate-500' : 'text-slate-400'}`}>The daily sync hasn't populated any jobs yet — trigger it manually from your GitHub repo's Actions tab, then refresh this page.</p>
+                  </div>
+                ) : (
+                  <>
+                    {recommended.length > 0 && (
+                      <section className="mb-8">
+                        <div className="flex items-center gap-2 mb-3 flex-wrap">
+                          <Sparkles size={16} className="text-emerald-600" />
+                          <h2 className={`font-display font-bold text-lg ${dark ? 'text-slate-100' : 'text-slate-900'}`}>Matched for you</h2>
+                          <span className={`text-xs ${dark ? 'text-slate-500' : 'text-slate-500'}`}>based on the skills saved in your profile</span>
+                        </div>
+                        <Carousel dark={dark} items={recommended} renderItem={(job) => <JobCard {...jobCardProps(job, true)} />} />
+                      </section>
+                    )}
+                    {currentUser && recommended.length === 0 && (
+                      <div className={`mb-8 border rounded-xl px-4 py-3 text-sm ${dark ? 'border-slate-800 bg-slate-900 text-slate-400' : 'border-slate-200 bg-white text-slate-500'}`}>
+                        Add a few skills in <button onClick={() => setPage('profile')} className={dark ? 'text-emerald-400 underline underline-offset-2' : 'text-emerald-700 underline underline-offset-2'}>your profile</button> and we'll match roles to you here.
+                      </div>
+                    )}
+
+                    <section>
+                      <div className="flex items-center justify-between mb-3">
+                        <h2 className={`font-display font-bold text-lg ${dark ? 'text-slate-100' : 'text-slate-900'}`}>
+                          {filters.domain === 'it' ? 'IT roles' : filters.domain === 'nonit' ? 'Non-IT roles' : 'All roles'} <span className={`font-normal text-sm ${dark ? 'text-slate-500' : 'text-slate-400'}`}>({filteredJobs.length})</span>
+                        </h2>
+                        <span className={`text-xs hidden sm:inline ${dark ? 'text-slate-500' : 'text-slate-400'}`}>Sorted by newest first</span>
+                      </div>
+                      {filteredJobs.length === 0 ? (
+                        <div className={`text-center py-16 border border-dashed rounded-2xl ${dark ? 'border-slate-700 bg-slate-900' : 'border-slate-300 bg-white'}`}>
+                          <p className={dark ? 'text-slate-200 font-medium' : 'text-slate-700 font-medium'}>No roles match these filters yet.</p>
+                          <p className={`text-sm mt-1 ${dark ? 'text-slate-500' : 'text-slate-400'}`}>Try clearing a filter, or check back after the next sync.</p>
+                          <button onClick={clearFilters} className={`mt-4 h-9 px-4 rounded-lg border text-sm transition-all duration-150 hover:-translate-y-0.5 active:translate-y-0 active:scale-95 ${dark ? 'border-slate-700 text-slate-300 hover:border-slate-600' : 'border-slate-200 text-slate-600 hover:border-slate-300'}`}>Clear filters</button>
+                        </div>
+                      ) : (
+                        <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+                          {filteredJobs.map((job) => <JobCard key={job.id} {...jobCardProps(job, false)} />)}
+                        </div>
+                      )}
+                    </section>
+                  </>
+                )}
+              </div>
+            </div>
 
             {!currentUser && (
               <div className={`mt-8 border rounded-2xl p-5 sm:p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 transition-all duration-300 hover:-translate-y-1 ${dark ? 'border-emerald-800 bg-emerald-500/5 shadow-[0_10px_30px_-14px_rgba(16,185,129,0.35)] hover:shadow-[0_18px_40px_-14px_rgba(16,185,129,0.45)]' : 'border-emerald-200 bg-emerald-50 shadow-[0_10px_30px_-14px_rgba(16,185,129,0.3)] hover:shadow-[0_18px_40px_-14px_rgba(16,185,129,0.4)]'}`}>
