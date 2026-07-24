@@ -85,6 +85,41 @@ function expandCategoryTokens(tokens) {
   return Array.from(expanded);
 }
 
+// Derives a friendly "posted via" label from the job's own link, since the
+// database doesn't store a separate source field — the domain already
+// tells us which platform (or the employer's own site) it came from.
+const KNOWN_JOB_SOURCES = [
+  ['linkedin.', 'LinkedIn'],
+  ['naukri.', 'Naukri'],
+  ['indeed.', 'Indeed'],
+  ['monster', 'Monster'],
+  ['glassdoor.', 'Glassdoor'],
+  ['shine.com', 'Shine'],
+  ['foundit.', 'foundit'],
+  ['instahyre.', 'Instahyre'],
+  ['wellfound.', 'Wellfound'],
+  ['angel.co', 'Wellfound'],
+  ['internshala.', 'Internshala'],
+  ['timesjobs.', 'TimesJobs'],
+  ['iimjobs.', 'iimjobs'],
+  ['adzuna.', 'Adzuna'],
+];
+
+function jobSourceLabel(link) {
+  if (!link) return null;
+  try {
+    const host = new URL(link).hostname.replace(/^www\./, '').toLowerCase();
+    const known = KNOWN_JOB_SOURCES.find(([needle]) => host.includes(needle));
+    if (known) return known[1];
+    // Falls back to the employer's own domain — e.g. "wipro.com" → "Wipro".
+    const root = host.split('.').slice(0, -1).join('.') || host;
+    const name = root.split('.').pop() || root;
+    return name.charAt(0).toUpperCase() + name.slice(1);
+  } catch (e) {
+    return null;
+  }
+}
+
 function matchScore(job, rawTokens) {
   let score = 0;
   const tokens = expandCategoryTokens(rawTokens);
@@ -138,9 +173,9 @@ function NavBtn({ active, onClick, children, dark }) {
 
 function StatTile({ value, label, dark }) {
   return (
-    <div className={card3D(dark, 'rounded-xl px-4 py-3 min-w-[110px]')}>
-      <div className={`font-display text-2xl sm:text-3xl font-extrabold leading-none ${dark ? 'text-emerald-400' : 'text-emerald-700'}`}>{value}</div>
-      <div className="text-[11px] uppercase tracking-wide text-slate-500 mt-1">{label}</div>
+    <div className={card3D(dark, 'rounded-xl px-2.5 py-2 sm:px-4 sm:py-3 min-w-0 text-center sm:text-left')}>
+      <div className={`font-display text-lg sm:text-2xl md:text-3xl font-extrabold leading-none truncate ${dark ? 'text-emerald-400' : 'text-emerald-700'}`}>{value}</div>
+      <div className="text-[9px] sm:text-[11px] uppercase tracking-wide text-slate-500 mt-1 truncate">{label}</div>
     </div>
   );
 }
@@ -401,6 +436,7 @@ function JobOrbit({ dark }) {
 
 function JobCard({ job, saved, onToggleSave, onOpen, currentUser, onRequestAuth, highlight, dark }) {
   const tilt = useTilt();
+  const source = jobSourceLabel(job.link);
 
   return (
     <div
@@ -409,8 +445,16 @@ function JobCard({ job, saved, onToggleSave, onOpen, currentUser, onRequestAuth,
       onMouseMove={tilt.onMouseMove}
       onMouseLeave={tilt.onMouseLeave}
       style={tilt.tiltStyle}
-      className={card3D(dark, `h-full cursor-pointer rounded-2xl p-5 flex flex-col gap-3 fade-in ${highlight ? (dark ? 'ring-1 ring-emerald-800' : 'ring-1 ring-emerald-300') : ''}`)}
+      className={card3D(dark, `relative h-full cursor-pointer rounded-2xl p-5 flex flex-col gap-3 fade-in ${highlight ? (dark ? 'ring-1 ring-emerald-800' : 'ring-1 ring-emerald-300') : ''}`)}
     >
+      {source && (
+        <span
+          title={`Posted via ${source}`}
+          className={`absolute -top-2.5 right-4 px-2 py-0.5 rounded-full text-[10px] font-semibold border shadow-sm ${dark ? 'bg-slate-800 border-slate-700 text-slate-300' : 'bg-white border-slate-200 text-slate-500'}`}
+        >
+          {source}
+        </span>
+      )}
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-center gap-3 min-w-0">
           <div className={`h-11 w-11 shrink-0 rounded-xl text-white flex items-center justify-center text-[11px] font-bold font-display shadow-[inset_0_1px_0_rgba(255,255,255,0.25),0_3px_6px_rgba(0,0,0,0.25)] ${dark ? 'bg-slate-700' : 'bg-slate-900'}`}>{initials(job.company)}</div>
@@ -427,6 +471,7 @@ function JobCard({ job, saved, onToggleSave, onOpen, currentUser, onRequestAuth,
           <Bookmark size={16} fill={saved ? 'currentColor' : 'none'} />
         </button>
       </div>
+
 
       <div className="flex flex-wrap gap-1.5">
         <LevelBadge level={job.level} dark={dark} />
@@ -1330,7 +1375,7 @@ export default function App() {
                 </div>
               </div>
 
-              <div className="relative z-10 flex gap-3 overflow-x-auto pb-1">
+              <div className="relative z-10 grid grid-cols-3 gap-2 sm:gap-3">
                 <StatTile value={jobs.length} label="Live roles" dark={dark} />
                 <StatTile value={jobs.filter((j) => j.daysAgo === 0).length} label="New today" dark={dark} />
                 <StatTile value={COMPANIES.length} label="Employers" dark={dark} />
