@@ -134,9 +134,9 @@ function matchScore(job, rawTokens) {
   return score;
 }
 
-const inputCls = (dark) => `w-full h-10 px-3 rounded-lg border text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 ${dark ? 'bg-slate-900 border-slate-700 text-slate-50 placeholder-slate-500' : 'bg-white border-slate-300 text-slate-900 placeholder-slate-400'}`;
-const selectCls = (dark) => `h-11 px-3 rounded-xl border text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 md:w-48 ${dark ? 'bg-slate-900 border-slate-700 text-slate-200' : 'bg-white border-slate-300 text-slate-700'}`;
-const selectClsFull = (dark) => `w-full h-11 px-3 rounded-xl border text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 ${dark ? 'bg-slate-900 border-slate-700 text-slate-200' : 'bg-white border-slate-300 text-slate-700'}`;
+const inputCls = (dark) => `w-full h-10 px-3 rounded-lg border text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${dark ? 'bg-slate-900 border-slate-700 text-slate-50 placeholder-slate-500' : 'bg-white border-slate-300 text-slate-900 placeholder-slate-400'}`;
+const selectCls = (dark) => `h-11 px-3 rounded-xl border text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 md:w-48 ${dark ? 'bg-slate-900 border-slate-700 text-slate-200' : 'bg-white border-slate-300 text-slate-700'}`;
+const selectClsFull = (dark) => `w-full h-11 px-3 rounded-xl border text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${dark ? 'bg-slate-900 border-slate-700 text-slate-200' : 'bg-white border-slate-300 text-slate-700'}`;
 const filterLabelCls = (dark) => `block text-[11px] uppercase tracking-wide font-semibold mb-1.5 ${dark ? 'text-slate-500' : 'text-slate-400'}`;
 
 // ---- Site-wide 3D language --------------------------------------------
@@ -151,9 +151,9 @@ const card3D = (dark, extra = '') =>
     : 'border-slate-200 bg-white shadow-[0_1px_1px_rgba(15,23,42,0.04),0_10px_20px_-8px_rgba(15,23,42,0.12),0_28px_44px_-18px_rgba(15,23,42,0.16)] hover:shadow-[0_2px_2px_rgba(15,23,42,0.05),0_18px_30px_-8px_rgba(15,23,42,0.16),0_40px_64px_-18px_rgba(15,23,42,0.2)]') +
   ' hover:-translate-y-1';
 
-const btn3D = (dark, tone = 'emerald') => {
+const btn3D = (dark, tone = 'blue') => {
   const edge = {
-    emerald: 'shadow-[0_4px_0_0_rgba(4,120,87,1),0_8px_14px_-4px_rgba(4,120,87,0.45)] active:shadow-[0_1px_0_0_rgba(4,120,87,1),0_2px_4px_-1px_rgba(4,120,87,0.4)]',
+    blue: 'shadow-[0_4px_0_0_rgba(29,78,216,1),0_8px_14px_-4px_rgba(29,78,216,0.45)] active:shadow-[0_1px_0_0_rgba(29,78,216,1),0_2px_4px_-1px_rgba(29,78,216,0.4)]',
     indigo: 'shadow-[0_4px_0_0_rgba(67,56,202,1),0_8px_14px_-4px_rgba(67,56,202,0.45)] active:shadow-[0_1px_0_0_rgba(67,56,202,1),0_2px_4px_-1px_rgba(67,56,202,0.4)]',
     red: 'shadow-[0_4px_0_0_rgba(153,27,27,1),0_8px_14px_-4px_rgba(153,27,27,0.4)] active:shadow-[0_1px_0_0_rgba(153,27,27,1),0_2px_4px_-1px_rgba(153,27,27,0.35)]',
     slate: dark
@@ -167,14 +167,14 @@ const btn3D = (dark, tone = 'emerald') => {
 /* ---------------------------- small presentational bits ---------------------------- */
 
 function NavBtn({ active, onClick, children, dark }) {
-  const cls = active ? (dark ? 'text-emerald-400 bg-emerald-500/10' : 'text-emerald-700 bg-emerald-50') : (dark ? 'text-slate-400 hover:text-slate-100' : 'text-slate-500 hover:text-slate-800');
+  const cls = active ? (dark ? 'text-blue-400 bg-blue-500/10' : 'text-blue-700 bg-blue-50') : (dark ? 'text-slate-400 hover:text-slate-100' : 'text-slate-500 hover:text-slate-800');
   return <button onClick={onClick} className={`px-3 py-2 rounded-lg text-sm font-medium transition ${cls}`}>{children}</button>;
 }
 
 function StatTile({ value, label, dark }) {
   return (
     <div className={card3D(dark, 'rounded-xl px-2.5 py-2 sm:px-4 sm:py-3 min-w-0 text-center sm:text-left')}>
-      <div className={`font-display text-lg sm:text-2xl md:text-3xl font-extrabold leading-none truncate ${dark ? 'text-emerald-400' : 'text-emerald-700'}`}>{value}</div>
+      <div className={`font-display text-lg sm:text-2xl md:text-3xl font-extrabold leading-none truncate ${dark ? 'text-blue-400' : 'text-blue-700'}`}>{value}</div>
       <div className="text-[9px] sm:text-[11px] uppercase tracking-wide text-slate-500 mt-1 truncate">{label}</div>
     </div>
   );
@@ -182,8 +182,8 @@ function StatTile({ value, label, dark }) {
 
 function LevelBadge({ level, dark }) {
   const map = dark
-    ? { fresher: 'text-emerald-400 border-emerald-800 bg-emerald-500/10', experienced: 'text-indigo-400 border-indigo-800 bg-indigo-500/10', both: 'text-slate-400 border-slate-700 bg-slate-800' }
-    : { fresher: 'text-emerald-700 border-emerald-200 bg-emerald-50', experienced: 'text-indigo-700 border-indigo-200 bg-indigo-50', both: 'text-slate-600 border-slate-300 bg-slate-100' };
+    ? { fresher: 'text-blue-400 border-blue-800 bg-blue-500/10', experienced: 'text-indigo-400 border-indigo-800 bg-indigo-500/10', both: 'text-slate-400 border-slate-700 bg-slate-800' }
+    : { fresher: 'text-blue-700 border-blue-200 bg-blue-50', experienced: 'text-indigo-700 border-indigo-200 bg-indigo-50', both: 'text-slate-600 border-slate-300 bg-slate-100' };
   const label = level === 'fresher' ? 'Fresher friendly' : level === 'experienced' ? 'Experienced' : 'All levels';
   return <span className={`text-[10px] uppercase tracking-wide font-semibold px-2 py-1 rounded-full border whitespace-nowrap ${map[level] || map.both}`}>{label}</span>;
 }
@@ -257,21 +257,44 @@ function useTilt() {
   return { ref, tiltStyle, onMouseMove, onMouseLeave };
 }
 
+function DebouncedSearchInput({ value, onChange, dark }) {
+  const [draft, setDraft] = useState(value);
+
+  // Keep in sync if the value is changed from outside (e.g. "Clear all").
+  useEffect(() => { setDraft(value); }, [value]);
+
+  useEffect(() => {
+    if (draft === value) return;
+    const t = window.setTimeout(() => onChange(draft), 200);
+    return () => window.clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [draft]);
+
+  return (
+    <input
+      value={draft}
+      onChange={(e) => setDraft(e.target.value)}
+      placeholder="Role, company or skill…"
+      className={inputCls(dark) + ' h-11 pl-9 pr-3 rounded-xl'}
+    />
+  );
+}
+
 function FilterPanel({ filters, setFilter, clearFilters, activeFilterCount, LOCATIONS, CATEGORIES, dark, onClose }) {
-  const pill = (active) => `shrink-0 h-9 px-3.5 rounded-full text-sm font-medium border transition-all duration-150 hover:-translate-y-0.5 active:translate-y-0 active:scale-95 ${active ? 'bg-emerald-600 text-white border-emerald-600 shadow-[0_3px_0_0_rgba(4,120,87,1)]' : (dark ? 'border-slate-700 text-slate-300 hover:border-slate-600' : 'border-slate-200 text-slate-600 hover:border-slate-300')}`;
+  const pill = (active) => `shrink-0 h-9 px-3.5 rounded-full text-sm font-medium border transition-all duration-150 hover:-translate-y-0.5 active:translate-y-0 active:scale-95 ${active ? 'bg-blue-600 text-white border-blue-600 shadow-[0_3px_0_0_rgba(29,78,216,1)]' : (dark ? 'border-slate-700 text-slate-300 hover:border-slate-600' : 'border-slate-200 text-slate-600 hover:border-slate-300')}`;
 
   return (
     <div className={card3D(dark, 'rounded-2xl p-4 sm:p-5')}>
       <div className="flex items-center justify-between mb-4">
         <h3 className={`font-display font-bold text-base flex items-center gap-2 ${dark ? 'text-slate-100' : 'text-slate-900'}`}>
-          <SlidersHorizontal size={16} className="text-emerald-600" /> Filters
+          <SlidersHorizontal size={16} className="text-blue-600" /> Filters
           {activeFilterCount > 0 && (
-            <span className="inline-flex items-center justify-center h-5 min-w-5 px-1 rounded-full bg-emerald-600 text-white text-[11px] font-bold">{activeFilterCount}</span>
+            <span className="inline-flex items-center justify-center h-5 min-w-5 px-1 rounded-full bg-blue-600 text-white text-[11px] font-bold">{activeFilterCount}</span>
           )}
         </h3>
         <div className="flex items-center gap-3">
           {activeFilterCount > 0 && (
-            <button onClick={clearFilters} className={`text-xs font-semibold flex items-center gap-1 transition-transform active:scale-95 ${dark ? 'text-emerald-400 hover:text-emerald-300' : 'text-emerald-700 hover:text-emerald-800'}`}>
+            <button onClick={clearFilters} className={`text-xs font-semibold flex items-center gap-1 transition-transform active:scale-95 ${dark ? 'text-blue-400 hover:text-blue-300' : 'text-blue-700 hover:text-blue-800'}`}>
               <RotateCcw size={12} /> Clear all
             </button>
           )}
@@ -286,12 +309,7 @@ function FilterPanel({ filters, setFilter, clearFilters, activeFilterCount, LOCA
           <label className={filterLabelCls(dark)}>Search</label>
           <div className="relative">
             <Search size={15} className={`absolute left-3 top-1/2 -translate-y-1/2 ${dark ? 'text-slate-500' : 'text-slate-400'}`} />
-            <input
-              value={filters.q}
-              onChange={(e) => setFilter({ q: e.target.value })}
-              placeholder="Role, company or skill…"
-              className={inputCls(dark) + ' h-11 pl-9 pr-3 rounded-xl'}
-            />
+            <DebouncedSearchInput value={filters.q} onChange={(v) => setFilter({ q: v })} dark={dark} />
           </div>
         </div>
 
@@ -400,7 +418,7 @@ function JobOrbit({ dark }) {
                   <div className="orbit-icon-counter">
                     <div
                       title={label}
-                      className={`h-11 w-11 rounded-xl border shadow-md flex items-center justify-center ${dark ? 'bg-slate-900 border-slate-700 text-emerald-400' : 'bg-white border-slate-200 text-emerald-600'}`}
+                      className={`h-11 w-11 rounded-xl border shadow-md flex items-center justify-center ${dark ? 'bg-slate-900 border-slate-700 text-blue-400' : 'bg-white border-slate-200 text-blue-600'}`}
                     >
                       <Icon size={19} />
                     </div>
@@ -414,14 +432,14 @@ function JobOrbit({ dark }) {
 
       <div className="absolute inset-0 flex items-center justify-center">
         <div
-          className={`hub-pulse h-16 w-16 rounded-full flex items-center justify-center ring-4 ${dark ? 'bg-gradient-to-br from-emerald-500 to-emerald-700 ring-slate-950' : 'bg-gradient-to-br from-emerald-400 to-emerald-600 ring-white'}`}
+          className={`hub-pulse h-16 w-16 rounded-full flex items-center justify-center ring-4 ${dark ? 'bg-gradient-to-br from-blue-500 to-blue-700 ring-slate-950' : 'bg-gradient-to-br from-blue-400 to-blue-600 ring-white'}`}
         >
           <Leaf size={26} className="text-white" />
         </div>
       </div>
 
       <div
-        className={`float-card absolute -top-1 left-1/2 -translate-x-1/2 rounded-xl border shadow-lg px-3 py-1.5 text-[11px] font-semibold flex items-center gap-1.5 whitespace-nowrap ${dark ? 'bg-slate-900 border-slate-700 text-emerald-400' : 'bg-white border-slate-200 text-emerald-700'}`}
+        className={`float-card absolute -top-1 left-1/2 -translate-x-1/2 rounded-xl border shadow-lg px-3 py-1.5 text-[11px] font-semibold flex items-center gap-1.5 whitespace-nowrap ${dark ? 'bg-slate-900 border-slate-700 text-blue-400' : 'bg-white border-slate-200 text-blue-700'}`}
       >
         <BadgeCheck size={13} /> Verified listings
       </div>
@@ -434,18 +452,18 @@ function JobOrbit({ dark }) {
   );
 }
 
-function JobCard({ job, saved, onToggleSave, onOpen, currentUser, onRequestAuth, highlight, dark }) {
+function JobCardInner({ job, saved, onToggleSave, onOpen, currentUser, onRequestAuth, highlight, dark }) {
   const tilt = useTilt();
   const source = jobSourceLabel(job.link);
 
   return (
     <div
       ref={tilt.ref}
-      onClick={onOpen}
+      onClick={() => onOpen(job.id)}
       onMouseMove={tilt.onMouseMove}
       onMouseLeave={tilt.onMouseLeave}
       style={tilt.tiltStyle}
-      className={card3D(dark, `relative h-full cursor-pointer rounded-2xl p-5 flex flex-col gap-3 fade-in ${highlight ? (dark ? 'ring-1 ring-emerald-800' : 'ring-1 ring-emerald-300') : ''}`)}
+      className={card3D(dark, `relative h-full cursor-pointer rounded-2xl p-5 flex flex-col gap-3 fade-in ${highlight ? (dark ? 'ring-1 ring-blue-800' : 'ring-1 ring-blue-300') : ''}`)}
     >
       {source && (
         <span
@@ -464,9 +482,9 @@ function JobCard({ job, saved, onToggleSave, onOpen, currentUser, onRequestAuth,
           </div>
         </div>
         <button
-          onClick={(e) => { e.stopPropagation(); onToggleSave(); }}
+          onClick={(e) => { e.stopPropagation(); onToggleSave(job.id); }}
           aria-label={saved ? 'Remove from saved roles' : 'Save this role'}
-          className={`h-9 w-9 shrink-0 flex items-center justify-center rounded-lg border transition-all duration-150 hover:-translate-y-0.5 active:translate-y-0 active:scale-90 ${saved ? (dark ? 'border-emerald-700 text-emerald-400 bg-emerald-500/10' : 'border-emerald-300 text-emerald-600 bg-emerald-50') : (dark ? 'border-slate-700 text-slate-500 hover:text-slate-300 hover:border-slate-600' : 'border-slate-200 text-slate-400 hover:text-slate-600 hover:border-slate-300')}`}
+          className={`h-9 w-9 shrink-0 flex items-center justify-center rounded-lg border transition-all duration-150 hover:-translate-y-0.5 active:translate-y-0 active:scale-90 ${saved ? (dark ? 'border-blue-700 text-blue-400 bg-blue-500/10' : 'border-blue-300 text-blue-600 bg-blue-50') : (dark ? 'border-slate-700 text-slate-500 hover:text-slate-300 hover:border-slate-600' : 'border-slate-200 text-slate-400 hover:text-slate-600 hover:border-slate-300')}`}
         >
           <Bookmark size={16} fill={saved ? 'currentColor' : 'none'} />
         </button>
@@ -495,7 +513,7 @@ function JobCard({ job, saved, onToggleSave, onOpen, currentUser, onRequestAuth,
       <div className={`pt-2 mt-auto border-t flex items-center justify-between ${dark ? 'border-slate-800' : 'border-slate-100'}`}>
         <span className={`text-xs ${dark ? 'text-slate-500' : 'text-slate-400'}`}>Tap for full description</span>
         {currentUser ? (
-          <a href={job.link} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()} className={`text-sm font-semibold flex items-center gap-1 ${dark ? 'text-emerald-400 hover:text-emerald-300' : 'text-emerald-700 hover:text-emerald-800'}`}>
+          <a href={job.link} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()} className={`text-sm font-semibold flex items-center gap-1 ${dark ? 'text-blue-400 hover:text-blue-300' : 'text-blue-700 hover:text-blue-800'}`}>
             Apply <ExternalLink size={13} />
           </a>
         ) : (
@@ -507,6 +525,13 @@ function JobCard({ job, saved, onToggleSave, onOpen, currentUser, onRequestAuth,
     </div>
   );
 }
+
+// Now that onOpen/onToggleSave are stable function references (see
+// toggleSave/openJobModal in the main App component) and currentUser only
+// changes when auth state actually changes, memoizing here means typing in
+// the search box no longer re-renders every visible job card — only the
+// ones whose own data actually changed.
+const JobCard = React.memo(JobCardInner);
 
 function Carousel({ items, renderItem, dark }) {
   const scrollerRef = useRef(null);
@@ -583,7 +608,7 @@ function JobDetailModal({ job, saved, onToggleSave, onClose, currentUser, onRequ
                 const rest = label ? line.slice(idx + 1) : line;
                 return (
                   <li key={i} className={`text-sm leading-relaxed flex gap-2 ${dark ? 'text-slate-400' : 'text-slate-600'}`}>
-                    <span className={dark ? 'text-emerald-400 mt-1' : 'text-emerald-600 mt-1'}>•</span>
+                    <span className={dark ? 'text-blue-400 mt-1' : 'text-blue-600 mt-1'}>•</span>
                     <span>{label && <strong className={dark ? 'text-slate-200' : 'text-slate-800'}>{label}:</strong>}{rest}</span>
                   </li>
                 );
@@ -603,11 +628,11 @@ function JobDetailModal({ job, saved, onToggleSave, onClose, currentUser, onRequ
         </div>
 
         <div className={`sticky bottom-0 ${panelBg} border-t px-6 py-4 flex items-center gap-3 ${borderCol}`}>
-          <button onClick={onToggleSave} className={`h-11 px-4 rounded-xl border font-medium text-sm flex items-center gap-2 shrink-0 transition-all duration-150 hover:-translate-y-0.5 active:translate-y-0 active:scale-95 ${saved ? (dark ? 'border-emerald-700 text-emerald-400 bg-emerald-500/10' : 'border-emerald-300 text-emerald-700 bg-emerald-50') : (dark ? 'border-slate-700 text-slate-400 hover:border-slate-600' : 'border-slate-200 text-slate-600 hover:border-slate-300')}`}>
+          <button onClick={onToggleSave} className={`h-11 px-4 rounded-xl border font-medium text-sm flex items-center gap-2 shrink-0 transition-all duration-150 hover:-translate-y-0.5 active:translate-y-0 active:scale-95 ${saved ? (dark ? 'border-blue-700 text-blue-400 bg-blue-500/10' : 'border-blue-300 text-blue-700 bg-blue-50') : (dark ? 'border-slate-700 text-slate-400 hover:border-slate-600' : 'border-slate-200 text-slate-600 hover:border-slate-300')}`}>
             <Bookmark size={16} fill={saved ? 'currentColor' : 'none'} /> <span className="hidden sm:inline">{saved ? 'Saved' : 'Save role'}</span>
           </button>
           {currentUser ? (
-            <a href={job.link} target="_blank" rel="noopener noreferrer" className={`flex-1 h-11 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-sm flex items-center justify-center gap-2 ${btn3D(dark)}`}>
+            <a href={job.link} target="_blank" rel="noopener noreferrer" className={`flex-1 h-11 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm flex items-center justify-center gap-2 ${btn3D(dark)}`}>
               Apply on {job.company}'s official site <ExternalLink size={15} />
             </a>
           ) : (
@@ -725,15 +750,15 @@ function AuthModal({ mode, onClose, onSwitch, onSendOtp, onVerifyOtp, onGoogle, 
               {isSignup && (
                 <label className={`flex items-start gap-2 text-xs pt-1 ${dark ? 'text-slate-400' : 'text-slate-500'}`}>
                   <input type="checkbox" checked={agree} onChange={(e) => setAgree(e.target.checked)} className="mt-0.5" />
-                  <span>I agree to the <button type="button" onClick={onOpenTC} className={dark ? 'text-emerald-400 underline underline-offset-2' : 'text-emerald-700 underline underline-offset-2'}>Terms & Conditions</button>, including storage of my email, phone number and address.</span>
+                  <span>I agree to the <button type="button" onClick={onOpenTC} className={dark ? 'text-blue-400 underline underline-offset-2' : 'text-blue-700 underline underline-offset-2'}>Terms & Conditions</button>, including storage of my email, phone number and address.</span>
                 </label>
               )}
-              <button type="submit" disabled={busy} className={`w-full h-11 rounded-lg bg-emerald-600 text-white font-semibold hover:bg-emerald-700 mt-2 disabled:opacity-60 disabled:translate-y-0 disabled:shadow-none ${btn3D(dark)}`}>{busy ? 'Sending code…' : 'Send code'}</button>
+              <button type="submit" disabled={busy} className={`w-full h-11 rounded-lg bg-blue-600 text-white font-semibold hover:bg-blue-700 mt-2 disabled:opacity-60 disabled:translate-y-0 disabled:shadow-none ${btn3D(dark)}`}>{busy ? 'Sending code…' : 'Send code'}</button>
             </form>
 
             <p className={`text-sm mt-4 text-center ${dark ? 'text-slate-400' : 'text-slate-500'}`}>
               {isSignup ? 'Already have an account? ' : 'New here? '}
-              <button onClick={onSwitch} className={`font-medium hover:underline ${dark ? 'text-emerald-400' : 'text-emerald-700'}`}>{isSignup ? 'Log in instead' : 'Create an account'}</button>
+              <button onClick={onSwitch} className={`font-medium hover:underline ${dark ? 'text-blue-400' : 'text-blue-700'}`}>{isSignup ? 'Log in instead' : 'Create an account'}</button>
             </p>
           </>
         ) : (
@@ -752,10 +777,10 @@ function AuthModal({ mode, onClose, onSwitch, onSendOtp, onVerifyOtp, onGoogle, 
                   maxLength={8}
                 />
               </Field>
-              <button type="submit" disabled={busy} className={`w-full h-11 rounded-lg bg-emerald-600 text-white font-semibold hover:bg-emerald-700 disabled:opacity-60 disabled:translate-y-0 disabled:shadow-none ${btn3D(dark)}`}>{busy ? 'Verifying…' : 'Verify & continue'}</button>
+              <button type="submit" disabled={busy} className={`w-full h-11 rounded-lg bg-blue-600 text-white font-semibold hover:bg-blue-700 disabled:opacity-60 disabled:translate-y-0 disabled:shadow-none ${btn3D(dark)}`}>{busy ? 'Verifying…' : 'Verify & continue'}</button>
               <div className="flex items-center justify-between text-xs pt-1">
                 <button type="button" onClick={() => { setStep('email'); setLocalError(''); }} className={dark ? 'text-slate-400 hover:text-slate-200' : 'text-slate-500 hover:text-slate-700'}>Change email</button>
-                <button type="button" onClick={resend} disabled={cooldown > 0 || busy} className={`disabled:opacity-50 ${dark ? 'text-emerald-400 hover:text-emerald-300' : 'text-emerald-700 hover:text-emerald-800'}`}>{cooldown > 0 ? `Resend code (${cooldown}s)` : 'Resend code'}</button>
+                <button type="button" onClick={resend} disabled={cooldown > 0 || busy} className={`disabled:opacity-50 ${dark ? 'text-blue-400 hover:text-blue-300' : 'text-blue-700 hover:text-blue-800'}`}>{cooldown > 0 ? `Resend code (${cooldown}s)` : 'Resend code'}</button>
               </div>
             </form>
           </>
@@ -780,7 +805,7 @@ function TCModal({ onClose, dark }) {
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm" onClick={onClose}>
       <div className={`modal-pop-3d w-full max-w-lg border rounded-2xl shadow-[0_40px_80px_-20px_rgba(0,0,0,0.5)] p-6 max-h-[85vh] overflow-y-auto ${panelBg}`} onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between mb-4">
-          <h2 className={`font-display text-xl font-bold flex items-center gap-2 ${strong}`}><ShieldCheck size={20} className="text-emerald-600" /> Terms & Conditions</h2>
+          <h2 className={`font-display text-xl font-bold flex items-center gap-2 ${strong}`}><ShieldCheck size={20} className="text-blue-600" /> Terms & Conditions</h2>
           <button onClick={onClose} className={`transition-transform active:scale-75 ${dark ? 'text-slate-500 hover:text-slate-200' : 'text-slate-400 hover:text-slate-700'}`} aria-label="Close"><X size={20} /></button>
         </div>
         <div className={`space-y-4 text-sm leading-relaxed ${body}`}>
@@ -814,7 +839,7 @@ function SkillsInput({ skills, onChange, dark }) {
       <div className="flex flex-wrap gap-1.5 mb-3 min-h-[28px]">
         {skills.length === 0 && <span className={`text-xs ${dark ? 'text-slate-500' : 'text-slate-400'}`}>No skills added yet — add a few below.</span>}
         {skills.map((s) => (
-          <span key={s} className={`flex items-center gap-1.5 text-xs font-medium pl-2.5 pr-1.5 py-1 rounded-full border ${dark ? 'bg-emerald-500/10 text-emerald-400 border-emerald-800' : 'bg-emerald-50 text-emerald-700 border-emerald-200'}`}>
+          <span key={s} className={`flex items-center gap-1.5 text-xs font-medium pl-2.5 pr-1.5 py-1 rounded-full border ${dark ? 'bg-blue-500/10 text-blue-400 border-blue-800' : 'bg-blue-50 text-blue-700 border-blue-200'}`}>
             {s}
             <button type="button" onClick={() => removeSkill(s)} aria-label={`Remove ${s}`} className="hover:opacity-70 transition-transform active:scale-75">
               <X size={12} />
@@ -830,7 +855,7 @@ function SkillsInput({ skills, onChange, dark }) {
           placeholder="e.g. Java — press Enter or tap Add"
           className={inputCls(dark)}
         />
-        <button type="button" onClick={addSkill} className={`h-10 px-4 rounded-lg bg-emerald-600 text-white text-sm font-semibold hover:bg-emerald-700 flex items-center gap-1 shrink-0 ${btn3D(dark)}`}>
+        <button type="button" onClick={addSkill} className={`h-10 px-4 rounded-lg bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700 flex items-center gap-1 shrink-0 ${btn3D(dark)}`}>
           <Plus size={14} /> Add
         </button>
       </div>
@@ -914,9 +939,9 @@ function GoogleConfirmModal({ email, onSendOtp, onVerifyOtp, dark }) {
               maxLength={8}
             />
           </Field>
-          <button type="submit" disabled={busy || !sent} className={`w-full h-11 rounded-lg bg-emerald-600 text-white font-semibold hover:bg-emerald-700 disabled:opacity-60 disabled:translate-y-0 disabled:shadow-none ${btn3D(dark)}`}>{busy ? 'Verifying…' : 'Verify & continue'}</button>
+          <button type="submit" disabled={busy || !sent} className={`w-full h-11 rounded-lg bg-blue-600 text-white font-semibold hover:bg-blue-700 disabled:opacity-60 disabled:translate-y-0 disabled:shadow-none ${btn3D(dark)}`}>{busy ? 'Verifying…' : 'Verify & continue'}</button>
           <div className="flex items-center justify-end text-xs pt-1">
-            <button type="button" onClick={send} disabled={cooldown > 0 || busy} className={`disabled:opacity-50 ${dark ? 'text-emerald-400 hover:text-emerald-300' : 'text-emerald-700 hover:text-emerald-800'}`}>{cooldown > 0 ? `Resend code (${cooldown}s)` : 'Resend code'}</button>
+            <button type="button" onClick={send} disabled={cooldown > 0 || busy} className={`disabled:opacity-50 ${dark ? 'text-blue-400 hover:text-blue-300' : 'text-blue-700 hover:text-blue-800'}`}>{cooldown > 0 ? `Resend code (${cooldown}s)` : 'Resend code'}</button>
           </div>
         </form>
       </div>
@@ -960,9 +985,9 @@ function CompleteProfileModal({ initialName, initialPhone, initialAddress, onSub
           <Field label="Address" dark={dark}><textarea value={address} onChange={(e) => setAddress(e.target.value)} rows={2} className={inputCls(dark) + ' resize-none'} placeholder="City, State" /></Field>
           <label className={`flex items-start gap-2 text-xs pt-1 ${dark ? 'text-slate-400' : 'text-slate-500'}`}>
             <input type="checkbox" checked={agree} onChange={(e) => setAgree(e.target.checked)} className="mt-0.5" />
-            <span>I agree to the <button type="button" onClick={onOpenTC} className={dark ? 'text-emerald-400 underline underline-offset-2' : 'text-emerald-700 underline underline-offset-2'}>Terms & Conditions</button>, including storage of my email, phone number and address.</span>
+            <span>I agree to the <button type="button" onClick={onOpenTC} className={dark ? 'text-blue-400 underline underline-offset-2' : 'text-blue-700 underline underline-offset-2'}>Terms & Conditions</button>, including storage of my email, phone number and address.</span>
           </label>
-          <button type="submit" disabled={busy} className={`w-full h-11 rounded-lg bg-emerald-600 text-white font-semibold hover:bg-emerald-700 disabled:opacity-60 disabled:translate-y-0 disabled:shadow-none ${btn3D(dark)}`}>{busy ? 'Saving…' : 'Save and continue'}</button>
+          <button type="submit" disabled={busy} className={`w-full h-11 rounded-lg bg-blue-600 text-white font-semibold hover:bg-blue-700 disabled:opacity-60 disabled:translate-y-0 disabled:shadow-none ${btn3D(dark)}`}>{busy ? 'Saving…' : 'Save and continue'}</button>
         </form>
       </div>
     </div>
@@ -1185,7 +1210,7 @@ export default function App() {
     showToast('Logged out.');
   };
 
-  const toggleSave = async (jobId) => {
+  const toggleSave = useCallback(async (jobId) => {
     if (!currentUser) { requestAuth(); showToast('Create a free account to save roles.'); return; }
     const has = currentUser.savedJobIds.includes(jobId);
     const nextSaved = has ? currentUser.savedJobIds.filter((id) => id !== jobId) : [...currentUser.savedJobIds, jobId];
@@ -1193,7 +1218,10 @@ export default function App() {
     if (error) { console.error('toggleSave failed:', error.message); showToast('Could not save — try again.'); return; }
     setSession((prev) => (prev ? { ...prev, user: data.user } : prev));
     showToast(has ? 'Removed from saved roles.' : 'Saved to your list.');
-  };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentUser, session]);
+
+  const openJobModal = useCallback((jobId) => setOpenJobId(jobId), []);
 
   const updateSkills = async (skillsArray) => {
     if (!currentUser) return;
@@ -1203,8 +1231,10 @@ export default function App() {
     showToast('Preferences updated — recommendations refreshed.');
   };
 
+  const [deletingAccount, setDeletingAccount] = useState(false);
   const deleteAccount = async () => {
     if (!session) return;
+    setDeletingAccount(true);
     try {
       const res = await fetch('/api/delete-account', {
         method: 'POST',
@@ -1215,6 +1245,7 @@ export default function App() {
         console.error('deleteAccount failed:', json.error || res.status, json.debug || '');
         const debugText = json.debug ? ` [hasUrl: ${json.debug.hasUrl}, hasServiceKey: ${json.debug.hasServiceKey}]` : '';
         showToast((json.error || 'Could not delete your account — try again.') + debugText);
+        setDeletingAccount(false);
         return;
       }
       await supabase.auth.signOut();
@@ -1223,6 +1254,7 @@ export default function App() {
     } catch (err) {
       console.error('deleteAccount failed:', err);
       showToast('Could not reach the server — try again in a moment.');
+      setDeletingAccount(false);
     }
   };
 
@@ -1296,7 +1328,7 @@ export default function App() {
   if (!authLoaded) {
     return (
       <div className="min-h-screen bg-slate-50 flex items-center justify-center font-body">
-        <div className="text-emerald-700 text-sm font-medium">Loading CareerBanyan…</div>
+        <div className="text-blue-700 text-sm font-medium">Loading CareerBanyan…</div>
       </div>
     );
   }
@@ -1304,8 +1336,8 @@ export default function App() {
   const jobCardProps = (job, highlight) => ({
     job, highlight, dark,
     saved: !!currentUser && currentUser.savedJobIds.includes(job.id),
-    onToggleSave: () => toggleSave(job.id),
-    onOpen: () => setOpenJobId(job.id),
+    onToggleSave: toggleSave,
+    onOpen: openJobModal,
     currentUser,
     onRequestAuth: requestAuth,
   });
@@ -1316,8 +1348,8 @@ export default function App() {
       <div className={`border-b sticky top-0 z-40 backdrop-blur shadow-[0_2px_2px_rgba(0,0,0,0.03),0_8px_20px_-10px_rgba(15,23,42,0.15)] ${dark ? 'bg-slate-950/95 border-slate-800' : 'bg-white/95 border-slate-200'}`}>
         <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
           <button onClick={goHome} className="flex items-center gap-2 shrink-0 transition-transform hover:-translate-y-0.5 active:translate-y-0 active:scale-95">
-            <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-emerald-400 to-emerald-600 text-white flex items-center justify-center shadow-[inset_0_1px_0_rgba(255,255,255,0.35),0_4px_10px_rgba(4,120,87,0.4)]"><Leaf size={18} /></div>
-            <span className={`font-display font-extrabold text-lg tracking-tight hidden sm:inline ${dark ? 'text-slate-50' : 'text-slate-900'}`}>Career<span className="text-emerald-600">Banyan</span></span>
+            <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-blue-400 to-blue-600 text-white flex items-center justify-center shadow-[inset_0_1px_0_rgba(255,255,255,0.35),0_4px_10px_rgba(29,78,216,0.4)]"><Leaf size={18} /></div>
+            <span className={`font-display font-extrabold text-lg tracking-tight hidden sm:inline ${dark ? 'text-slate-50' : 'text-slate-900'}`}>Career<span className="text-blue-600">Banyan</span></span>
           </button>
 
           <nav className="hidden md:flex items-center gap-1">
@@ -1337,7 +1369,7 @@ export default function App() {
             ) : (
               <>
                 <button onClick={() => { setAuthError(''); setAuthModal('login'); }} className={`text-sm h-9 px-3 rounded-lg border transition-all duration-150 hover:-translate-y-0.5 active:translate-y-0 active:scale-95 ${dark ? 'border-slate-700 text-slate-300 hover:border-slate-600' : 'border-slate-200 text-slate-600 hover:border-slate-300'}`}>Log in</button>
-                <button onClick={() => { setAuthError(''); setAuthModal('signup'); }} className={`text-sm h-9 px-3 rounded-lg bg-emerald-600 text-white font-semibold hover:bg-emerald-700 ${btn3D(dark)}`}>Sign up free</button>
+                <button onClick={() => { setAuthError(''); setAuthModal('signup'); }} className={`text-sm h-9 px-3 rounded-lg bg-blue-600 text-white font-semibold hover:bg-blue-700 ${btn3D(dark)}`}>Sign up free</button>
               </>
             )}
             <button className={`md:hidden h-9 w-9 flex items-center justify-center rounded-lg border transition-all duration-150 active:scale-90 ${dark ? 'border-slate-700 text-slate-300' : 'border-slate-200 text-slate-600'}`} onClick={() => setMobileNav((v) => !v)} aria-label="Menu"><Menu size={16} /></button>
@@ -1363,10 +1395,10 @@ export default function App() {
       <main className="max-w-6xl mx-auto px-4 sm:px-6 py-8">
         {page === 'home' && (
           <>
-            <section className={`relative overflow-hidden mb-6 rounded-3xl border p-6 sm:p-8 bg-gradient-to-br shadow-[0_1px_1px_rgba(0,0,0,0.03),0_20px_50px_-24px_rgba(15,23,42,0.35)] ${dark ? 'from-emerald-500/5 via-slate-950 to-indigo-500/5 border-slate-800' : 'from-emerald-50 via-white to-indigo-50 border-slate-200'}`}>
+            <section className={`relative overflow-hidden mb-6 rounded-3xl border p-6 sm:p-8 bg-gradient-to-br shadow-[0_1px_1px_rgba(0,0,0,0.03),0_20px_50px_-24px_rgba(15,23,42,0.35)] ${dark ? 'from-blue-500/5 via-slate-950 to-indigo-500/5 border-slate-800' : 'from-blue-50 via-white to-indigo-50 border-slate-200'}`}>
               <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6 mb-6">
                 <div className="flex-1 min-w-0">
-                  <div className="text-xs font-semibold text-emerald-600 uppercase tracking-widest mb-2">Fresher & experienced roles · Across India</div>
+                  <div className="text-xs font-semibold text-blue-600 uppercase tracking-widest mb-2">Fresher & experienced roles · Across India</div>
                   <h1 className={`font-display text-3xl sm:text-4xl font-extrabold leading-tight max-w-xl ${dark ? 'text-slate-50' : 'text-slate-900'}`}>New roles land here first. Yours could be next.</h1>
                   <p className={`mt-2 max-w-lg text-sm sm:text-base ${dark ? 'text-slate-400' : 'text-slate-600'}`}>Engineering, management, law, medicine and everything between — filter it your way, then jump straight to the company's own site and apply. Always free.</p>
                 </div>
@@ -1390,7 +1422,7 @@ export default function App() {
             >
               <SlidersHorizontal size={16} /> Filters
               {activeFilterCount > 0 && (
-                <span className="inline-flex items-center justify-center h-5 min-w-5 px-1 rounded-full bg-emerald-600 text-white text-[11px] font-bold">{activeFilterCount}</span>
+                <span className="inline-flex items-center justify-center h-5 min-w-5 px-1 rounded-full bg-blue-600 text-white text-[11px] font-bold">{activeFilterCount}</span>
               )}
             </button>
 
@@ -1440,7 +1472,7 @@ export default function App() {
                     {recommended.length > 0 && (
                       <section className="mb-8">
                         <div className="flex items-center gap-2 mb-3 flex-wrap">
-                          <Sparkles size={16} className="text-emerald-600" />
+                          <Sparkles size={16} className="text-blue-600" />
                           <h2 className={`font-display font-bold text-lg ${dark ? 'text-slate-100' : 'text-slate-900'}`}>Matched for you</h2>
                           <span className={`text-xs ${dark ? 'text-slate-500' : 'text-slate-500'}`}>based on the skills saved in your profile</span>
                         </div>
@@ -1449,7 +1481,7 @@ export default function App() {
                     )}
                     {currentUser && recommended.length === 0 && (
                       <div className={`mb-8 border rounded-xl px-4 py-3 text-sm ${dark ? 'border-slate-800 bg-slate-900 text-slate-400' : 'border-slate-200 bg-white text-slate-500'}`}>
-                        Add a few skills in <button onClick={() => setPage('profile')} className={dark ? 'text-emerald-400 underline underline-offset-2' : 'text-emerald-700 underline underline-offset-2'}>your profile</button> and we'll match roles to you here.
+                        Add a few skills in <button onClick={() => setPage('profile')} className={dark ? 'text-blue-400 underline underline-offset-2' : 'text-blue-700 underline underline-offset-2'}>your profile</button> and we'll match roles to you here.
                       </div>
                     )}
 
@@ -1478,12 +1510,12 @@ export default function App() {
             </div>
 
             {!currentUser && (
-              <div className={`mt-8 border rounded-2xl p-5 sm:p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 transition-all duration-300 hover:-translate-y-1 ${dark ? 'border-emerald-800 bg-emerald-500/5 shadow-[0_10px_30px_-14px_rgba(16,185,129,0.35)] hover:shadow-[0_18px_40px_-14px_rgba(16,185,129,0.45)]' : 'border-emerald-200 bg-emerald-50 shadow-[0_10px_30px_-14px_rgba(16,185,129,0.3)] hover:shadow-[0_18px_40px_-14px_rgba(16,185,129,0.4)]'}`}>
+              <div className={`mt-8 border rounded-2xl p-5 sm:p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 transition-all duration-300 hover:-translate-y-1 ${dark ? 'border-blue-800 bg-blue-500/5 shadow-[0_10px_30px_-14px_rgba(59,130,246,0.35)] hover:shadow-[0_18px_40px_-14px_rgba(59,130,246,0.45)]' : 'border-blue-200 bg-blue-50 shadow-[0_10px_30px_-14px_rgba(59,130,246,0.3)] hover:shadow-[0_18px_40px_-14px_rgba(59,130,246,0.4)]'}`}>
                 <div>
                   <div className={`font-display font-bold text-base ${dark ? 'text-slate-100' : 'text-slate-900'}`}>Get roles matched to you</div>
                   <div className={`text-sm mt-1 ${dark ? 'text-slate-400' : 'text-slate-600'}`}>Create a free account to unlock Apply, save roles, and see picks based on your skills.</div>
                 </div>
-                <button onClick={() => { setAuthError(''); setAuthModal('signup'); }} className={`h-10 px-5 rounded-lg bg-emerald-600 text-white font-semibold shrink-0 hover:bg-emerald-700 ${btn3D(dark)}`}>Sign up free</button>
+                <button onClick={() => { setAuthError(''); setAuthModal('signup'); }} className={`h-10 px-5 rounded-lg bg-blue-600 text-white font-semibold shrink-0 hover:bg-blue-700 ${btn3D(dark)}`}>Sign up free</button>
               </div>
             )}
           </>
@@ -1500,7 +1532,7 @@ export default function App() {
                   <div className={`text-center py-16 border border-dashed rounded-2xl ${dark ? 'border-slate-700 bg-slate-900' : 'border-slate-300 bg-white'}`}>
                     <p className={dark ? 'text-slate-200 font-medium' : 'text-slate-700 font-medium'}>You haven't saved any roles yet.</p>
                     <p className={`text-sm mt-1 ${dark ? 'text-slate-500' : 'text-slate-400'}`}>Tap the bookmark icon on a listing to keep it here.</p>
-                    <button onClick={() => setPage('home')} className={`mt-4 h-9 px-4 rounded-lg bg-emerald-600 text-white text-sm font-semibold hover:bg-emerald-700 ${btn3D(dark)}`}>Browse roles</button>
+                    <button onClick={() => setPage('home')} className={`mt-4 h-9 px-4 rounded-lg bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700 ${btn3D(dark)}`}>Browse roles</button>
                   </div>
                 );
               }
@@ -1537,7 +1569,13 @@ export default function App() {
             <div className={`border rounded-2xl p-5 shadow-[0_10px_24px_-14px_rgba(153,27,27,0.3)] ${dark ? 'border-red-900/50 bg-red-500/5' : 'border-red-200 bg-red-50'}`}>
               <h2 className={`font-semibold text-sm mb-1 ${dark ? 'text-red-400' : 'text-red-700'}`}>Delete account</h2>
               <p className={`text-xs mb-3 ${dark ? 'text-slate-400' : 'text-slate-500'}`}>Permanently deletes your login, saved roles and preferences. This cannot be undone.</p>
-              <button onClick={() => { if (window.confirm("Delete your account and all data? This can't be undone.")) deleteAccount(); }} className={`h-9 px-4 rounded-lg border text-sm transition-all duration-150 hover:-translate-y-0.5 active:translate-y-0 active:scale-95 ${dark ? 'border-red-800 text-red-400 hover:bg-red-500/10' : 'border-red-300 text-red-700 hover:bg-red-100'}`}>Delete my account & data</button>
+              <button
+                onClick={() => { if (window.confirm("Delete your account and all data? This can't be undone.")) deleteAccount(); }}
+                disabled={deletingAccount}
+                className={`h-9 px-4 rounded-lg border text-sm transition-all duration-150 hover:-translate-y-0.5 active:translate-y-0 active:scale-95 disabled:opacity-60 disabled:translate-y-0 ${dark ? 'border-red-800 text-red-400 hover:bg-red-500/10' : 'border-red-300 text-red-700 hover:bg-red-100'}`}
+              >
+                {deletingAccount ? 'Deleting…' : 'Delete my account & data'}
+              </button>
             </div>
           </section>
         )}
@@ -1546,7 +1584,7 @@ export default function App() {
       <footer className={`border-t mt-12 ${dark ? 'border-slate-800 bg-slate-950' : 'border-slate-200 bg-white'}`}>
         <div className={`max-w-6xl mx-auto px-4 sm:px-6 py-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 text-xs ${dark ? 'text-slate-500' : 'text-slate-400'}`}>
           <div>
-            <span className={`font-display font-bold ${dark ? 'text-slate-300' : 'text-slate-700'}`}>Career<span className="text-emerald-600">Banyan</span></span>
+            <span className={`font-display font-bold ${dark ? 'text-slate-300' : 'text-slate-700'}`}>Career<span className="text-blue-600">Banyan</span></span>
             <p className="mt-1 max-w-md">Listings sync daily from public job-search data. Apply requires a free account. This board never charges job seekers a fee.</p>
           </div>
           <div className="flex items-center gap-4">
