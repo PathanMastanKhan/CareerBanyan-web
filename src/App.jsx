@@ -1358,18 +1358,18 @@ export default function App() {
           </nav>
 
           <div className="flex items-center gap-2">
-            <button onClick={toggleTheme} aria-label={dark ? 'Switch to light theme' : 'Switch to dark theme'} className={`h-9 w-9 flex items-center justify-center rounded-lg border transition-all duration-150 hover:-translate-y-0.5 active:translate-y-0 active:scale-90 ${dark ? 'border-slate-700 text-amber-400 hover:border-slate-600' : 'border-slate-200 text-slate-600 hover:border-slate-300'}`}>
+            <button onClick={toggleTheme} aria-label={dark ? 'Switch to light theme' : 'Switch to dark theme'} className={`hidden md:flex h-9 w-9 items-center justify-center rounded-lg border transition-all duration-150 hover:-translate-y-0.5 active:translate-y-0 active:scale-90 ${dark ? 'border-slate-700 text-amber-400 hover:border-slate-600' : 'border-slate-200 text-slate-600 hover:border-slate-300'}`}>
               {dark ? <Sun size={16} /> : <Moon size={16} />}
             </button>
             {currentUser ? (
               <>
-                <span className={`hidden sm:inline text-sm ${dark ? 'text-slate-400' : 'text-slate-500'}`}>Hi, {currentUser.name.split(' ')[0]}</span>
-                <button onClick={handleLogout} className={`text-sm h-9 px-3 rounded-lg border flex items-center gap-1.5 transition-all duration-150 hover:-translate-y-0.5 active:translate-y-0 active:scale-95 ${dark ? 'border-slate-700 text-slate-300 hover:border-slate-600' : 'border-slate-200 text-slate-600 hover:border-slate-300'}`}><LogOut size={14} /> <span className="hidden sm:inline">Log out</span></button>
+                <span className={`hidden md:inline text-sm ${dark ? 'text-slate-400' : 'text-slate-500'}`}>Hi, {currentUser.name.split(' ')[0]}</span>
+                <button onClick={handleLogout} className={`hidden md:flex text-sm h-9 px-3 rounded-lg border items-center gap-1.5 transition-all duration-150 hover:-translate-y-0.5 active:translate-y-0 active:scale-95 ${dark ? 'border-slate-700 text-slate-300 hover:border-slate-600' : 'border-slate-200 text-slate-600 hover:border-slate-300'}`}><LogOut size={14} /> <span>Log out</span></button>
               </>
             ) : (
               <>
-                <button onClick={() => { setAuthError(''); setAuthModal('login'); }} className={`text-sm h-9 px-3 rounded-lg border transition-all duration-150 hover:-translate-y-0.5 active:translate-y-0 active:scale-95 ${dark ? 'border-slate-700 text-slate-300 hover:border-slate-600' : 'border-slate-200 text-slate-600 hover:border-slate-300'}`}>Log in</button>
-                <button onClick={() => { setAuthError(''); setAuthModal('signup'); }} className={`text-sm h-9 px-3 rounded-lg bg-blue-600 text-white font-semibold hover:bg-blue-700 ${btn3D(dark)}`}>Sign up free</button>
+                <button onClick={() => { setAuthError(''); setAuthModal('login'); }} className={`hidden md:inline-flex text-sm h-9 px-3 rounded-lg border transition-all duration-150 hover:-translate-y-0.5 active:translate-y-0 active:scale-95 ${dark ? 'border-slate-700 text-slate-300 hover:border-slate-600' : 'border-slate-200 text-slate-600 hover:border-slate-300'}`}>Log in</button>
+                <button onClick={() => { setAuthError(''); setAuthModal('signup'); }} className={`hidden md:inline-flex text-sm h-9 px-3 rounded-lg bg-blue-600 text-white font-semibold hover:bg-blue-700 ${btn3D(dark)}`}>Sign up free</button>
               </>
             )}
             <button className={`md:hidden h-9 w-9 flex items-center justify-center rounded-lg border transition-all duration-150 active:scale-90 ${dark ? 'border-slate-700 text-slate-300' : 'border-slate-200 text-slate-600'}`} onClick={() => setMobileNav((v) => !v)} aria-label="Menu"><Menu size={16} /></button>
@@ -1379,6 +1379,23 @@ export default function App() {
           <div className={`md:hidden border-t px-4 py-3 flex flex-col gap-1 ${dark ? 'border-slate-800' : 'border-slate-200'}`}>
             {currentUser && <NavBtn active={page === 'saved'} onClick={() => { setPage('saved'); setMobileNav(false); }} dark={dark}>Saved ({currentUser.savedJobIds.length})</NavBtn>}
             {currentUser && <NavBtn active={page === 'profile'} onClick={() => { setPage('profile'); setMobileNav(false); }} dark={dark}>Profile</NavBtn>}
+            <button onClick={() => { toggleTheme(); setMobileNav(false); }} className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium text-left ${dark ? 'text-slate-300 hover:bg-slate-800' : 'text-slate-600 hover:bg-slate-100'}`}>
+              {dark ? <Sun size={15} /> : <Moon size={15} />} {dark ? 'Light mode' : 'Dark mode'}
+            </button>
+            {currentUser ? (
+              <button onClick={() => { handleLogout(); setMobileNav(false); }} className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium text-left ${dark ? 'text-slate-300 hover:bg-slate-800' : 'text-slate-600 hover:bg-slate-100'}`}>
+                <LogOut size={15} /> Log out
+              </button>
+            ) : (
+              <>
+                <button onClick={() => { setAuthError(''); setAuthModal('login'); setMobileNav(false); }} className={`px-3 py-2 rounded-lg text-sm font-medium text-left ${dark ? 'text-slate-300 hover:bg-slate-800' : 'text-slate-600 hover:bg-slate-100'}`}>
+                  Log in
+                </button>
+                <button onClick={() => { setAuthError(''); setAuthModal('signup'); setMobileNav(false); }} className={`mt-1 h-10 rounded-lg bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700 ${btn3D(dark)}`}>
+                  Sign up free
+                </button>
+              </>
+            )}
           </div>
         )}
       </div>
