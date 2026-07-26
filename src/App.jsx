@@ -173,7 +173,7 @@ function NavBtn({ active, onClick, children, dark }) {
 
 function StatTile({ value, label, dark }) {
   return (
-    <div className={card3D(dark, 'rounded-xl px-2.5 py-2 sm:px-4 sm:py-3 min-w-0 text-center sm:text-left')}>
+    <div className={card3D(dark, 'rounded-xl px-2.5 py-3 sm:px-4 sm:py-4 min-w-0 flex flex-col items-center justify-center text-center')}>
       <div className={`font-display text-lg sm:text-2xl md:text-3xl font-extrabold leading-none truncate ${dark ? 'text-blue-400' : 'text-blue-700'}`}>{value}</div>
       <div className="text-[9px] sm:text-[11px] uppercase tracking-wide text-slate-500 mt-1 truncate">{label}</div>
     </div>
