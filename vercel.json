@@ -1,0 +1,9 @@
+{
+  "crons": [
+    { "path": "/api/send-job-alerts", "schedule": "0 3 * * *" }
+  ],
+  "rewrites": [
+    { "source": "/sitemap.xml", "destination": "/api/sitemap" },
+    { "source": "/job/(.*)", "destination": "/index.html" }
+  ]
+}
