@@ -1,5 +1,4 @@
 import { createClient } from '@supabase/supabase-js';
-import ws from 'ws';
 
 // This runs on Vercel's server, never in the browser — it's the only place
 // allowed to use the powerful service_role key.
@@ -26,9 +25,12 @@ export default async function handler(req, res) {
       },
     });
   }
+  // No `realtime`/`ws` transport needed here — this function only calls
+  // REST auth-admin endpoints. Wiring up a websocket transport in a
+  // request/response serverless function does nothing useful and is an
+  // extra dependency (and failure point) for no benefit.
   const adminClient = createClient(supabaseUrl, serviceKey, {
     auth: { autoRefreshToken: false, persistSession: false },
-    realtime: { transport: ws },
   });
   // Verify the token actually belongs to a real, currently signed-in user —
   // this stops anyone from deleting an account that isn't theirs.
