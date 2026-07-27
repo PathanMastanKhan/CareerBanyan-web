@@ -23,7 +23,13 @@ export default async function handler(req, res) {
   const supabaseUrl = process.env.VITE_SUPABASE_URL;
   const serviceKey = process.env.SUPABASE_SERVICE_KEY;
   const resendKey = process.env.RESEND_API_KEY;
-  const siteUrl = process.env.SITE_URL || 'https://careerbanyan.vercel.app';
+  // Keep this in sync with SITE_URL in api/sitemap.js and SITE_URL exported
+  // from src/App.jsx — all three should point at the same real domain.
+  const siteUrl = (process.env.SITE_URL || 'https://careerbanyan.vercel.app').replace(/\/$/, '');
+  // Resend will reject sends from a domain you haven't verified in your
+  // Resend dashboard. Set ALERTS_FROM_EMAIL in Vercel env vars once you've
+  // verified a sending domain there — this placeholder will NOT work as-is.
+  const fromAddress = process.env.ALERTS_FROM_EMAIL || 'CareerBanyan <alerts@yourdomain.com>';
 
   if (!supabaseUrl || !serviceKey || !resendKey) {
     return res.status(500).json({
@@ -106,7 +112,7 @@ export default async function handler(req, res) {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        from: 'CareerBanyan <alerts@yourdomain.com>',
+        from: fromAddress,
         to: user.email,
         subject: `${matched.length} new role${matched.length > 1 ? 's' : ''} matching your skills`,
         html,
