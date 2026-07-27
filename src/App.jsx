@@ -1,6 +1,15 @@
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import { Search, MapPin, Bookmark, LogOut, X, Menu, ExternalLink, Sparkles, ShieldCheck, Leaf, Sun, Moon, ChevronLeft, ChevronRight, Plus, Code2, Cpu, Wrench, Building2, FlaskConical, Briefcase, BadgeCheck, Bell } from 'lucide-react';
 import { supabase } from './supabaseClient';
+
+// ---------------------------------------------------------------------
+// IMPORTANT: this must exactly match the domain your site actually lives
+// on in Vercel (check Vercel → your project → Domains). It's used to
+// build the sitemap, canonical tags, and links in job-alert emails.
+// Update this in ONE place and everything downstream stays consistent.
+// ---------------------------------------------------------------------
+export const SITE_URL = 'https://careerbanyan.vercel.app';
 
 function initials(name) {
   const clean = (name || '').replace(/\(.*?\)/g, '').trim();
@@ -23,14 +32,59 @@ function matchScore(job, tokens) {
   return score;
 }
 
+// --- lightweight head-tag helpers (no react-helmet dependency needed) ---
+function setMetaTag(attrName, attrValue, content) {
+  let tag = document.head.querySelector(`meta[${attrName}="${attrValue}"]`);
+  if (!tag) {
+    tag = document.createElement('meta');
+    tag.setAttribute(attrName, attrValue);
+    document.head.appendChild(tag);
+  }
+  tag.setAttribute('content', content);
+}
+
+function setCanonical(href) {
+  let link = document.head.querySelector('link[rel="canonical"]');
+  if (!link) {
+    link = document.createElement('link');
+    link.setAttribute('rel', 'canonical');
+    document.head.appendChild(link);
+  }
+  link.setAttribute('href', href);
+}
+
+const DEFAULT_TITLE = 'CareerBanyan — Jobs for India';
+const DEFAULT_DESC = 'Fresher and experienced job listings across India, updated daily.';
+
+function useDocumentHead(job) {
+  useEffect(() => {
+    if (job) {
+      const title = `${job.role} at ${job.company} — CareerBanyan`;
+      const rawDesc = `${job.role} at ${job.company} in ${job.city}. ${job.description && job.description[0] ? job.description[0] : ''}`;
+      const desc = rawDesc.length > 160 ? `${rawDesc.slice(0, 157)}...` : rawDesc;
+      const url = `${SITE_URL}/job/${job.id}`;
+
+      document.title = title;
+      setMetaTag('name', 'description', desc);
+      setMetaTag('property', 'og:title', title);
+      setMetaTag('property', 'og:description', desc);
+      setMetaTag('property', 'og:url', url);
+      setCanonical(url);
+    } else {
+      document.title = DEFAULT_TITLE;
+      setMetaTag('name', 'description', DEFAULT_DESC);
+      setMetaTag('property', 'og:title', DEFAULT_TITLE);
+      setMetaTag('property', 'og:description', DEFAULT_DESC);
+      setMetaTag('property', 'og:url', `${SITE_URL}/`);
+      setCanonical(`${SITE_URL}/`);
+    }
+  }, [job]);
+}
+
 const inputCls = (dark) => `w-full h-10 px-3 rounded-lg border text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 ${dark ? 'bg-slate-900 border-slate-700 text-slate-50 placeholder-slate-500' : 'bg-white border-slate-300 text-slate-900 placeholder-slate-400'}`;
 const selectCls = (dark) => `h-11 px-3 rounded-xl border text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 md:w-48 ${dark ? 'bg-slate-900 border-slate-700 text-slate-200' : 'bg-white border-slate-300 text-slate-700'}`;
 
 // ---- Site-wide 3D language --------------------------------------------
-// Every raised surface (cards, panels, modals) uses the same layered
-// shadow + hover-lift so depth reads consistently across the whole page,
-// not just in one hero. Every solid button behaves like a physical 3D
-// key: a coloured "edge" beneath it that the button presses into on click.
 const card3D = (dark, extra = '') =>
   `${extra} border transition-all duration-300 ease-out will-change-transform ` +
   (dark
@@ -47,7 +101,7 @@ const btn3D = (dark, tone = 'emerald') => {
       ? 'shadow-[0_4px_0_0_rgba(30,41,59,1),0_8px_14px_-4px_rgba(0,0,0,0.5)] active:shadow-[0_1px_0_0_rgba(30,41,59,1),0_2px_4px_-1px_rgba(0,0,0,0.4)]'
       : 'shadow-[0_4px_0_0_rgba(203,213,225,1),0_8px_14px_-4px_rgba(15,23,42,0.15)] active:shadow-[0_1px_0_0_rgba(203,213,225,1),0_2px_4px_-1px_rgba(15,23,42,0.1)]',
   }[tone];
-  return `transition-all duration-150 ${edge} hover:-translate-y-0.5 active:translate-y-1`;
+  return `transition-all duration-150 ${edge} hover:-translate-y-0.5 active:translate-y-0.5`;
 };
 // -------------------------------------------------------------------------
 
@@ -145,12 +199,6 @@ function useTilt() {
 }
 
 function JobOrbit({ dark }) {
-  // The brand's own mark (a leaf — the "banyan tree") sits at the centre,
-  // with the major hiring branches orbiting it like limbs of the tree.
-  // Kept flat (no rotateX tilt) — tilting this into a fake 3D floor made
-  // the icons land at inconsistent-looking radii and read as scattered
-  // rather than a ring. A clean flat ring + drop shadows reads as more
-  // "3D" in practice than a distorted ellipse.
   const branches = [
     { Icon: Code2, label: 'CSE / IT' },
     { Icon: Cpu, label: 'ECE' },
@@ -163,16 +211,8 @@ function JobOrbit({ dark }) {
   const radius = 100;
 
   return (
-    <div
-      aria-hidden="true"
-      className="relative shrink-0"
-      style={{ width: size, height: size }}
-    >
-      <div
-        className={`orbit-floor absolute inset-0 rounded-full ${dark ? 'text-slate-800' : 'text-slate-200'}`}
-        style={{ opacity: 0.6 }}
-      />
-
+    <div aria-hidden="true" className="relative shrink-0" style={{ width: size, height: size }}>
+      <div className={`orbit-floor absolute inset-0 rounded-full ${dark ? 'text-slate-800' : 'text-slate-200'}`} style={{ opacity: 0.6 }} />
       <div className="orbit-ring absolute inset-0">
         {branches.map(({ Icon, label }, i) => {
           const angle = (360 / branches.length) * i;
@@ -181,10 +221,7 @@ function JobOrbit({ dark }) {
               <div className="absolute left-1/2 top-0" style={{ transform: `translate(-50%, ${size / 2 - radius}px)` }}>
                 <div style={{ transform: `rotate(${-angle}deg)` }}>
                   <div className="orbit-icon-counter">
-                    <div
-                      title={label}
-                      className={`h-11 w-11 rounded-xl border shadow-md flex items-center justify-center ${dark ? 'bg-slate-900 border-slate-700 text-emerald-400' : 'bg-white border-slate-200 text-emerald-600'}`}
-                    >
+                    <div title={label} className={`h-11 w-11 rounded-xl border shadow-md flex items-center justify-center ${dark ? 'bg-slate-900 border-slate-700 text-emerald-400' : 'bg-white border-slate-200 text-emerald-600'}`}>
                       <Icon size={19} />
                     </div>
                   </div>
@@ -194,23 +231,15 @@ function JobOrbit({ dark }) {
           );
         })}
       </div>
-
       <div className="absolute inset-0 flex items-center justify-center">
-        <div
-          className={`hub-pulse h-16 w-16 rounded-full flex items-center justify-center ring-4 ${dark ? 'bg-gradient-to-br from-emerald-500 to-emerald-700 ring-slate-950' : 'bg-gradient-to-br from-emerald-400 to-emerald-600 ring-white'}`}
-        >
+        <div className={`hub-pulse h-16 w-16 rounded-full flex items-center justify-center ring-4 ${dark ? 'bg-gradient-to-br from-emerald-500 to-emerald-700 ring-slate-950' : 'bg-gradient-to-br from-emerald-400 to-emerald-600 ring-white'}`}>
           <Leaf size={26} className="text-white" />
         </div>
       </div>
-
-      <div
-        className={`float-card absolute -top-1 left-1/2 -translate-x-1/2 rounded-xl border shadow-lg px-3 py-1.5 text-[11px] font-semibold flex items-center gap-1.5 whitespace-nowrap ${dark ? 'bg-slate-900 border-slate-700 text-emerald-400' : 'bg-white border-slate-200 text-emerald-700'}`}
-      >
+      <div className={`float-card absolute -top-1 left-1/2 -translate-x-1/2 rounded-xl border shadow-lg px-3 py-1.5 text-[11px] font-semibold flex items-center gap-1.5 whitespace-nowrap ${dark ? 'bg-slate-900 border-slate-700 text-emerald-400' : 'bg-white border-slate-200 text-emerald-700'}`}>
         <BadgeCheck size={13} /> Verified listings
       </div>
-      <div
-        className={`float-card float-card-delay absolute -bottom-1 left-1/2 -translate-x-1/2 rounded-xl border shadow-lg px-3 py-1.5 text-[11px] font-semibold flex items-center gap-1.5 whitespace-nowrap ${dark ? 'bg-slate-900 border-slate-700 text-amber-400' : 'bg-white border-slate-200 text-amber-700'}`}
-      >
+      <div className={`float-card float-card-delay absolute -bottom-1 left-1/2 -translate-x-1/2 rounded-xl border shadow-lg px-3 py-1.5 text-[11px] font-semibold flex items-center gap-1.5 whitespace-nowrap ${dark ? 'bg-slate-900 border-slate-700 text-amber-400' : 'bg-white border-slate-200 text-amber-700'}`}>
         <Bell size={13} /> New role synced
       </div>
     </div>
@@ -557,7 +586,7 @@ function GoogleMark() {
 }
 
 function CompleteProfileModal({ initialPhone, initialAddress, onSendOtp, onVerifyOtp, onOpenTC, dark }) {
-  const [step, setStep] = useState('phone'); // 'phone' | 'otp'
+  const [step, setStep] = useState('phone');
   const [phone, setPhone] = useState(initialPhone || '');
   const [address, setAddress] = useState(initialAddress || '');
   const [agree, setAgree] = useState(false);
@@ -669,6 +698,14 @@ function Toast({ message }) {
 /* ---------------------------------- main app ---------------------------------- */
 
 export default function App() {
+  const navigate = useNavigate();
+  const params = useParams();
+  // When this component is mounted under the "/job/:id" route, params.id is
+  // the job id from the URL. Under any other route it's undefined. This
+  // replaces the old local `openJobId` state — the URL is now the single
+  // source of truth, which is what makes each job linkable/crawlable.
+  const openJobId = params.id || null;
+
   const [authLoaded, setAuthLoaded] = useState(false);
   const [session, setSession] = useState(null);
 
@@ -682,7 +719,6 @@ export default function App() {
   const [showBanner, setShowBanner] = useState(true);
   const [mobileNav, setMobileNav] = useState(false);
   const [toast, setToast] = useState(null);
-  const [openJobId, setOpenJobId] = useState(null);
   const [draftFilters, setDraftFilters] = useState({ level: 'all', domain: 'all', q: '', loc: 'All Locations', cat: 'All Categories' });
   const [filters, setFilters] = useState({ level: 'all', domain: 'all', q: '', loc: 'All Locations', cat: 'All Categories' });
   const applyFilters = () => setFilters(draftFilters);
@@ -769,12 +805,10 @@ export default function App() {
       address: meta.address || '',
       skills: skillsArr,
       savedJobIds: meta.saved_job_ids || [],
+      alertsEnabled: !!meta.alerts_enabled,
     };
   }, [session]);
 
-  // A profile only counts as "complete" once the phone number has actually
-  // been OTP-verified — not just typed in. This also re-prompts anyone
-  // whose number was accepted before verification existed.
   const needsProfileCompletion = !!currentUser && !currentUser.phoneVerified;
 
   useEffect(() => {
@@ -787,6 +821,7 @@ export default function App() {
     setPage('home');
     clearFilters();
     setMobileNav(false);
+    navigate('/');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -804,7 +839,7 @@ export default function App() {
     const { error } = await supabase.auth.signUp({
       email,
       password,
-      options: { data: { name, skills: [], saved_job_ids: [] } },
+      options: { data: { name, skills: [], saved_job_ids: [], alerts_enabled: false } },
     });
     if (error) return setAuthError(error.message);
 
@@ -831,17 +866,11 @@ export default function App() {
     if (error) setAuthError(error.message);
   };
 
-  // Converts a loosely-formatted Indian mobile number into the E.164 shape
-  // Supabase's phone-OTP API expects (+91XXXXXXXXXX).
   const toE164 = (raw) => {
     const digits = raw.replace(/\D/g, '').replace(/^91/, '');
     return `+91${digits}`;
   };
 
-  // Step 1: send the OTP. Requires Phone auth + an SMS provider (Twilio,
-  // MessageBird, Vonage, etc.) to be configured in the Supabase dashboard —
-  // this call will fail with a clear Supabase error message if that isn't
-  // set up yet.
   const sendPhoneOtp = async (phone) => {
     const cleanPhone = phone.trim();
     if (!/^(\+91[-\s]?)?[6-9]\d{9}$/.test(cleanPhone.replace(/\s+/g, ''))) {
@@ -853,8 +882,6 @@ export default function App() {
     return { ok: true, e164 };
   };
 
-  // Step 2: confirm the code the user received, then persist the verified
-  // phone + address to profile metadata.
   const verifyPhoneOtp = async (e164, code, address) => {
     const { error: verifyError } = await supabase.auth.verifyOtp({ phone: e164, token: code.trim(), type: 'phone_change' });
     if (verifyError) return { ok: false, message: 'That code is incorrect or expired — try again or resend it.' };
@@ -869,10 +896,10 @@ export default function App() {
     return { ok: true };
   };
 
-
   const handleLogout = async () => {
     await supabase.auth.signOut();
     setPage('home');
+    navigate('/');
     showToast('Logged out.');
   };
 
@@ -894,6 +921,16 @@ export default function App() {
     showToast('Preferences updated — recommendations refreshed.');
   };
 
+  // Turns email job alerts on/off. This is the missing piece that made
+  // send-job-alerts.js a no-op: nothing ever set alerts_enabled before.
+  const updateAlerts = async (enabled) => {
+    if (!currentUser) return;
+    const { data, error } = await supabase.auth.updateUser({ data: { ...session.user.user_metadata, alerts_enabled: enabled } });
+    if (error) { console.error('updateAlerts failed:', error.message); showToast('Could not update alert settings — try again.'); return; }
+    setSession((prev) => (prev ? { ...prev, user: data.user } : prev));
+    showToast(enabled ? 'Email alerts turned on.' : 'Email alerts turned off.');
+  };
+
   const deleteAccount = async () => {
     if (!session) return;
     try {
@@ -910,6 +947,7 @@ export default function App() {
       }
       await supabase.auth.signOut();
       setPage('home');
+      navigate('/');
       showToast('Your account and data have been deleted.');
     } catch (err) {
       console.error('deleteAccount failed:', err);
@@ -948,7 +986,12 @@ export default function App() {
     return scored.slice(0, 6).map((x) => x.job);
   }, [currentUser, jobs]);
 
-  const openJob = openJobId ? jobs.find((j) => j.id === openJobId) : null;
+  const openJob = openJobId ? jobs.find((j) => String(j.id) === String(openJobId)) : null;
+
+  // Keep <title>/<meta description>/canonical in sync with whichever job
+  // is open. This is what gives each listing its own unique, indexable
+  // page identity instead of every URL sharing one static title/description.
+  useDocumentHead(openJob);
 
   if (!authLoaded) {
     return (
@@ -962,7 +1005,7 @@ export default function App() {
     job, highlight, dark,
     saved: !!currentUser && currentUser.savedJobIds.includes(job.id),
     onToggleSave: () => toggleSave(job.id),
-    onOpen: () => setOpenJobId(job.id),
+    onOpen: () => navigate(`/job/${job.id}`),
     currentUser,
     onRequestAuth: requestAuth,
   });
@@ -1190,6 +1233,27 @@ export default function App() {
               <SkillsInput skills={currentUser.skills} onChange={updateSkills} dark={dark} />
             </div>
 
+            <div className={card3D(dark, 'rounded-2xl p-5 mb-6')}>
+              <div className="flex items-center justify-between gap-4">
+                <div>
+                  <h2 className={`font-semibold text-sm mb-1 ${dark ? 'text-slate-200' : 'text-slate-800'}`}>Email job alerts</h2>
+                  <p className={`text-xs ${dark ? 'text-slate-500' : 'text-slate-400'}`}>Get a daily email when new roles matching your skills go live. Uses the skills list above.</p>
+                </div>
+                <button
+                  type="button"
+                  role="switch"
+                  aria-checked={currentUser.alertsEnabled}
+                  onClick={() => updateAlerts(!currentUser.alertsEnabled)}
+                  className={`shrink-0 h-7 w-12 rounded-full relative transition-colors duration-200 ${currentUser.alertsEnabled ? 'bg-emerald-600' : (dark ? 'bg-slate-700' : 'bg-slate-300')}`}
+                >
+                  <span className={`absolute top-0.5 h-6 w-6 rounded-full bg-white shadow transition-transform duration-200 ${currentUser.alertsEnabled ? 'translate-x-5' : 'translate-x-0.5'}`} />
+                </button>
+              </div>
+              {currentUser.alertsEnabled && currentUser.skills.length === 0 && (
+                <p className={`text-xs mt-3 ${dark ? 'text-amber-400' : 'text-amber-700'}`}>Add at least one skill above so we know what to match you against.</p>
+              )}
+            </div>
+
             <div className={`border rounded-2xl p-5 shadow-[0_10px_24px_-14px_rgba(153,27,27,0.3)] ${dark ? 'border-red-900/50 bg-red-500/5' : 'border-red-200 bg-red-50'}`}>
               <h2 className={`font-semibold text-sm mb-1 ${dark ? 'text-red-400' : 'text-red-700'}`}>Delete account</h2>
               <p className={`text-xs mb-3 ${dark ? 'text-slate-400' : 'text-slate-500'}`}>Permanently deletes your login, saved roles and preferences. This cannot be undone.</p>
@@ -1215,7 +1279,7 @@ export default function App() {
         job={openJob}
         saved={!!currentUser && !!openJob && currentUser.savedJobIds.includes(openJob.id)}
         onToggleSave={() => openJob && toggleSave(openJob.id)}
-        onClose={() => setOpenJobId(null)}
+        onClose={() => navigate('/')}
         currentUser={currentUser}
         onRequestAuth={requestAuth}
         dark={dark}
