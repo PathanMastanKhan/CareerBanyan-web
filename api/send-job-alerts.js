@@ -26,7 +26,14 @@ export default async function handler(req, res) {
   const siteUrl = process.env.SITE_URL || 'https://careerbanyan.vercel.app';
 
   if (!supabaseUrl || !serviceKey || !resendKey) {
-    return res.status(500).json({ error: 'Server missing required env vars' });
+    return res.status(500).json({
+      error: 'Server missing required env vars',
+      debug: {
+        hasSupabaseUrl: !!supabaseUrl,
+        hasServiceKey: !!serviceKey,
+        hasResendKey: !!resendKey,
+      },
+    });
   }
 
   const supabase = createClient(supabaseUrl, serviceKey);
