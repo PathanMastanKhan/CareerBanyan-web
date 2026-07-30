@@ -1,4 +1,4 @@
-import { createClient } from '@supabase/supabase-js';
+import { createClient } from '@supabase/supabase-js':
 
 // This runs on Vercel's server, never in the browser — it's the only place
 // allowed to use the powerful service_role key.
