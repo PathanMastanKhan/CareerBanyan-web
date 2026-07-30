@@ -581,7 +581,25 @@ function TCModal({ onClose, dark }) {
     </div>
   );
 }
+function JobNotFoundModal({ onClose, dark }) {
+  useEffect(() => {
+    const onKey = (e) => { if (e.key === 'Escape') onClose(); };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [onClose]);
 
+  const panelBg = dark ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200';
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm" onClick={onClose}>
+      <div className={`modal-pop-3d w-full max-w-md border rounded-2xl shadow-[0_40px_80px_-20px_rgba(0,0,0,0.5)] p-6 text-center ${panelBg}`} onClick={(e) => e.stopPropagation()}>
+        <h2 className={`font-display text-lg font-bold mb-2 ${dark ? 'text-slate-100' : 'text-slate-900'}`}>This role isn't available anymore</h2>
+        <p className={`text-sm mb-5 ${dark ? 'text-slate-400' : 'text-slate-500'}`}>It may have been filled or removed by the employer.</p>
+        <button onClick={onClose} className={`h-10 px-5 rounded-lg bg-emerald-600 text-white font-semibold hover:bg-emerald-700 ${btn3D(dark)}`}>Browse other roles</button>
+      </div>
+    </div>
+  );
+}
 function SkillsInput({ skills, onChange, dark }) {
   const [draft, setDraft] = useState('');
 
@@ -1174,16 +1192,20 @@ export default function App() {
         </div>
       </footer>
 
-      <JobDetailModal
-        job={openJob}
-        saved={!!currentUser && !!openJob && currentUser.savedJobIds.includes(openJob.id)}
-        onToggleSave={() => openJob && toggleSave(openJob.id)}
-        onClose={() => navigate('/')}
-        currentUser={currentUser}
-        onRequestAuth={requestAuth}
-        dark={dark}
-      />
-
+{openJobId && !jobsLoading && !openJob ? (
+        <JobNotFoundModal onClose={() => navigate('/')} dark={dark} />
+      ) : (
+        <JobDetailModal
+          job={openJob}
+          saved={!!currentUser && !!openJob && currentUser.savedJobIds.includes(openJob.id)}
+          onToggleSave={() => openJob && toggleSave(openJob.id)}
+          onClose={() => navigate('/')}
+          currentUser={currentUser}
+          onRequestAuth={requestAuth}
+          dark={dark}
+        />
+      )}
+      
       <AuthModal
         open={authModalOpen}
         onClose={() => { setAuthModalOpen(false); setAuthError(''); }}
