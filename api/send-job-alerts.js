@@ -1,5 +1,4 @@
 import { createClient } from '@supabase/supabase-js';
-
 function matchScore(job, tokens) {
   let score = 0;
   const role = (job.role || '').toLowerCase();
