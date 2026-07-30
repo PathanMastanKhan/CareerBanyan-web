@@ -32,6 +32,31 @@ function matchScore(job, tokens) {
   return score;
 }
 
+// ---------------------------------------------------------------------
+// Course / degree background classifier — client-side, best-effort.
+// Scans each job's role/category/skills/description text for keywords
+// and buckets it under the closest matching Indian degree stream.
+// Jobs that don't match anything fall into "general" (any graduate).
+// ---------------------------------------------------------------------
+const COURSE_CATEGORIES = [
+  { key: 'engineering', label: 'B.Tech / B.E. (Engineering)', keywords: ['engineer', 'engineering', 'b.tech', 'btech', 'mechanical', 'civil', 'electrical', 'electronics', 'ece', 'software developer', 'developer', 'devops', 'embedded'] },
+  { key: 'computer_apps', label: 'BCA / MCA (Computer Applications)', keywords: ['bca', 'mca', 'software tester', 'qa engineer', 'it support', 'network admin'] },
+  { key: 'science', label: 'B.Sc / M.Sc (Science)', keywords: ['b.sc', 'bsc', 'm.sc', 'msc', 'lab technician', 'chemist', 'biology', 'microbiology', 'research assistant', 'data scientist', 'data analyst'] },
+  { key: 'pharmacy', label: 'B.Pharmacy / Pharmacy', keywords: ['pharmacist', 'pharmacy', 'pharma', 'pharmaceutical', 'drug safety', 'medical representative'] },
+  { key: 'commerce', label: 'B.Com / M.Com (Commerce)', keywords: ['accountant', 'accounting', 'b.com', 'bcom', 'taxation', 'audit', 'bookkeeping', 'finance executive', 'gst'] },
+  { key: 'management', label: 'BBA / MBA (Management)', keywords: ['mba', 'bba', 'management trainee', 'business analyst', 'marketing executive', 'sales executive', 'hr executive', 'operations manager', 'business development'] },
+  { key: 'law', label: 'LLB / Law', keywords: ['lawyer', 'legal', 'llb', 'advocate', 'paralegal', 'compliance officer', 'legal counsel'] },
+  { key: 'arts', label: 'BA / MA (Arts & Humanities)', keywords: ['content writer', 'journalist', 'ba ', 'humanities', 'social work', 'teacher', 'copywriter', 'translator'] },
+];
+
+function classifyCourseCategory(job) {
+  const hay = `${job.role} ${job.category} ${(job.skills || []).join(' ')} ${(job.description || []).join(' ')}`.toLowerCase();
+  for (const cat of COURSE_CATEGORIES) {
+    if (cat.keywords.some((k) => hay.includes(k))) return cat.key;
+  }
+  return 'general';
+}
+
 // --- lightweight head-tag helpers (no react-helmet dependency needed) ---
 function setMetaTag(attrName, attrValue, content) {
   let tag = document.head.querySelector(`meta[${attrName}="${attrValue}"]`);
@@ -663,6 +688,18 @@ function Toast({ message }) {
 
 /* ---------------------------------- main app ---------------------------------- */
 
+const DEFAULT_FILTERS = { level: 'all', domain: 'all', q: '', loc: 'All Locations', cat: 'All Categories', yearOfStudy: 'all', expYears: 'all', course: 'all' };
+
+function expYearsInRange(expStr, bucket) {
+  if (bucket === 'all' || !expStr) return true;
+  const match = expStr.match(/(\d+)/);
+  if (!match) return true; // free-text like "See official listing" — don't exclude
+  const years = parseInt(match[1], 10);
+  const ranges = { '0-1': [0, 1], '1-3': [1, 3], '3-5': [3, 5], '5-10': [5, 10], '10+': [10, Infinity] };
+  const [min, max] = ranges[bucket] || [0, Infinity];
+  return years >= min && years <= max;
+}
+
 export default function App() {
   const navigate = useNavigate();
   const params = useParams();
@@ -681,14 +718,37 @@ export default function App() {
   const [showBanner, setShowBanner] = useState(true);
   const [mobileNav, setMobileNav] = useState(false);
   const [toast, setToast] = useState(null);
-  const [draftFilters, setDraftFilters] = useState({ level: 'all', domain: 'all', q: '', loc: 'All Locations', cat: 'All Categories' });
-  const [filters, setFilters] = useState({ level: 'all', domain: 'all', q: '', loc: 'All Locations', cat: 'All Categories' });
+  const [draftFilters, setDraftFilters] = useState(DEFAULT_FILTERS);
+  const [filters, setFilters] = useState(DEFAULT_FILTERS);
   const applyFilters = () => setFilters(draftFilters);
   const clearFilters = () => {
-    const reset = { level: 'all', domain: 'all', q: '', loc: 'All Locations', cat: 'All Categories' };
-    setDraftFilters(reset);
-    setFilters(reset);
+    setDraftFilters(DEFAULT_FILTERS);
+    setFilters(DEFAULT_FILTERS);
   };
+
+  // auto-apply helpers — clicking these updates `filters` immediately,
+  // no need to press the Search button
+  const setLevel = (val) => {
+    const next = { ...draftFilters, level: val, yearOfStudy: 'all', expYears: 'all' };
+    setDraftFilters(next);
+    setFilters(next);
+  };
+  const setYearOfStudy = (val) => {
+    const next = { ...draftFilters, yearOfStudy: val };
+    setDraftFilters(next);
+    setFilters(next);
+  };
+  const setExpYears = (val) => {
+    const next = { ...draftFilters, expYears: val };
+    setDraftFilters(next);
+    setFilters(next);
+  };
+  const setCourse = (val) => {
+    const next = { ...draftFilters, course: val };
+    setDraftFilters(next);
+    setFilters(next);
+  };
+
   const toastTimer = useRef(null);
 
   const [theme, setThemeState] = useState(() => {
@@ -738,7 +798,8 @@ export default function App() {
           daysAgo: Math.max(0, Math.floor((Date.now() - new Date(d.posted_at).getTime()) / 86400000)),
           link: d.link,
         }));
-        setJobs(mapped);
+        const withCourses = mapped.map((j) => ({ ...j, courseCategory: classifyCourseCategory(j) }));
+        setJobs(withCourses);
         setJobsLoading(false);
       });
   }, []);
@@ -885,6 +946,8 @@ export default function App() {
     const q = filters.q.trim().toLowerCase();
     return jobs.filter((job) => {
       if (filters.level !== 'all' && job.level !== filters.level && job.level !== 'both') return false;
+      if (filters.level === 'experienced' && !expYearsInRange(job.experience, filters.expYears)) return false;
+      if (filters.course !== 'all' && job.courseCategory !== filters.course) return false;
       if (filters.domain === 'it' && !job.isIT) return false;
       if (filters.domain === 'nonit' && job.isIT) return false;
       if (filters.loc !== 'All Locations' && job.city !== filters.loc) return false;
@@ -1034,14 +1097,53 @@ export default function App() {
                       ))}
                     </div>
                   </div>
+
                   <div className={`rounded-xl border p-3 shadow-[inset_0_1px_3px_rgba(0,0,0,0.06)] ${dark ? 'border-slate-800 bg-slate-800/30' : 'border-slate-100 bg-slate-50'}`}>
                     <div className={`text-[11px] uppercase tracking-wide font-semibold mb-2 ${dark ? 'text-slate-500' : 'text-slate-400'}`}>Experience level</div>
                     <div className="no-scrollbar flex gap-2 overflow-x-auto pb-1">
                       {[['all', 'All levels'], ['fresher', 'Freshers'], ['experienced', 'Experienced']].map(([val, label]) => (
-                        <button key={val} onClick={() => setDraftFilters((f) => ({ ...f, level: val }))} className={`shrink-0 h-9 px-4 rounded-full text-sm font-medium border transition-all duration-150 hover:-translate-y-0.5 active:translate-y-0 active:scale-95 ${draftFilters.level === val ? 'bg-emerald-600 text-white border-emerald-600 shadow-[0_3px_0_0_rgba(4,120,87,1)]' : (dark ? 'border-slate-700 text-slate-300 hover:border-slate-600' : 'border-slate-200 text-slate-600 hover:border-slate-300')}`}>{label}</button>
+                        <button key={val} onClick={() => setLevel(val)} className={`shrink-0 h-9 px-4 rounded-full text-sm font-medium border transition-all duration-150 hover:-translate-y-0.5 active:translate-y-0 active:scale-95 ${draftFilters.level === val ? 'bg-emerald-600 text-white border-emerald-600 shadow-[0_3px_0_0_rgba(4,120,87,1)]' : (dark ? 'border-slate-700 text-slate-300 hover:border-slate-600' : 'border-slate-200 text-slate-600 hover:border-slate-300')}`}>{label}</button>
                       ))}
                     </div>
+
+                    {draftFilters.level === 'fresher' && (
+                      <div className="mt-3">
+                        <div className={`text-[11px] uppercase tracking-wide font-semibold mb-2 ${dark ? 'text-slate-500' : 'text-slate-400'}`}>Which year are you in?</div>
+                        <select value={draftFilters.yearOfStudy} onChange={(e) => setYearOfStudy(e.target.value)} className={selectCls(dark) + ' w-full md:w-auto'}>
+                          <option value="all">Select year</option>
+                          <option value="1">1st Year</option>
+                          <option value="2">2nd Year</option>
+                          <option value="3">3rd Year</option>
+                          <option value="4">4th Year</option>
+                          <option value="final">Final Year</option>
+                          <option value="passed">Passed Out</option>
+                        </select>
+                      </div>
+                    )}
+
+                    {draftFilters.level === 'experienced' && (
+                      <div className="mt-3">
+                        <div className={`text-[11px] uppercase tracking-wide font-semibold mb-2 ${dark ? 'text-slate-500' : 'text-slate-400'}`}>Years of experience</div>
+                        <select value={draftFilters.expYears} onChange={(e) => setExpYears(e.target.value)} className={selectCls(dark) + ' w-full md:w-auto'}>
+                          <option value="all">Any</option>
+                          <option value="0-1">0–1 years</option>
+                          <option value="1-3">1–3 years</option>
+                          <option value="3-5">3–5 years</option>
+                          <option value="5-10">5–10 years</option>
+                          <option value="10+">10+ years</option>
+                        </select>
+                      </div>
+                    )}
                   </div>
+                </div>
+
+                <div className={`mt-3 rounded-xl border p-3 shadow-[inset_0_1px_3px_rgba(0,0,0,0.06)] ${dark ? 'border-slate-800 bg-slate-800/30' : 'border-slate-100 bg-slate-50'}`}>
+                  <div className={`text-[11px] uppercase tracking-wide font-semibold mb-2 ${dark ? 'text-slate-500' : 'text-slate-400'}`}>Course / degree background</div>
+                  <select value={draftFilters.course} onChange={(e) => setCourse(e.target.value)} className={selectCls(dark) + ' w-full md:w-auto'}>
+                    <option value="all">All courses</option>
+                    {COURSE_CATEGORIES.map((c) => <option key={c.key} value={c.key}>{c.label}</option>)}
+                    <option value="general">Any graduate / general</option>
+                  </select>
                 </div>
               </div>
             </section>
