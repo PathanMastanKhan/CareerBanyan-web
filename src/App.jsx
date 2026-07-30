@@ -3,12 +3,6 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { Search, MapPin, Bookmark, LogOut, X, Menu, ExternalLink, Sparkles, ShieldCheck, Leaf, Sun, Moon, ChevronLeft, ChevronRight, Plus, Code2, Cpu, Wrench, Building2, FlaskConical, Briefcase, BadgeCheck, Bell } from 'lucide-react';
 import { supabase } from './supabaseClient';
 
-// ---------------------------------------------------------------------
-// IMPORTANT: this must exactly match the domain your site actually lives
-// on in Vercel (check Vercel → your project → Domains). It's used to
-// build the sitemap, canonical tags, and links in job-alert emails.
-// Update this in ONE place and everything downstream stays consistent.
-// ---------------------------------------------------------------------
 export const SITE_URL = 'https://careerbanyan.vercel.app';
 
 function initials(name) {
@@ -32,12 +26,6 @@ function matchScore(job, tokens) {
   return score;
 }
 
-// ---------------------------------------------------------------------
-// Course / degree background classifier — client-side, best-effort.
-// Scans each job's role/category/skills/description text for keywords
-// and buckets it under the closest matching Indian degree stream.
-// Jobs that don't match anything fall into "general" (any graduate).
-// ---------------------------------------------------------------------
 const COURSE_CATEGORIES = [
   { key: 'engineering', label: 'B.Tech / B.E. (Engineering)', keywords: ['engineer', 'engineering', 'b.tech', 'btech', 'mechanical', 'civil', 'electrical', 'electronics', 'ece', 'software developer', 'developer', 'devops', 'embedded'] },
   { key: 'computer_apps', label: 'BCA / MCA (Computer Applications)', keywords: ['bca', 'mca', 'software tester', 'qa engineer', 'it support', 'network admin'] },
@@ -57,7 +45,6 @@ function classifyCourseCategory(job) {
   return 'general';
 }
 
-// --- lightweight head-tag helpers (no react-helmet dependency needed) ---
 function setMetaTag(attrName, attrValue, content) {
   let tag = document.head.querySelector(`meta[${attrName}="${attrValue}"]`);
   if (!tag) {
@@ -107,9 +94,9 @@ function useDocumentHead(job) {
 }
 
 const inputCls = (dark) => `w-full h-10 px-3 rounded-lg border text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 ${dark ? 'bg-slate-900 border-slate-700 text-slate-50 placeholder-slate-500' : 'bg-white border-slate-300 text-slate-900 placeholder-slate-400'}`;
-const selectCls = (dark) => `h-11 px-3 rounded-xl border text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 md:w-48 ${dark ? 'bg-slate-900 border-slate-700 text-slate-200' : 'bg-white border-slate-300 text-slate-700'}`;
+const selectCls = (dark) => `h-11 px-3 rounded-xl border text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 ${dark ? 'bg-slate-900 border-slate-700 text-slate-200' : 'bg-white border-slate-300 text-slate-700'}`;
+const pillCls = (dark, active) => `shrink-0 h-9 px-4 rounded-full text-sm font-medium border transition-all duration-150 hover:-translate-y-0.5 active:translate-y-0 active:scale-95 ${active ? 'bg-emerald-600 text-white border-emerald-600 shadow-[0_3px_0_0_rgba(4,120,87,1)]' : (dark ? 'border-slate-700 text-slate-300 hover:border-slate-600' : 'border-slate-200 text-slate-600 hover:border-slate-300')}`;
 
-// ---- Site-wide 3D language --------------------------------------------
 const card3D = (dark, extra = '') =>
   `${extra} border transition-all duration-300 ease-out will-change-transform ` +
   (dark
@@ -128,9 +115,6 @@ const btn3D = (dark, tone = 'emerald') => {
   }[tone];
   return `transition-all duration-150 ${edge} hover:-translate-y-0.5 active:translate-y-0.5`;
 };
-// -------------------------------------------------------------------------
-
-/* ---------------------------- small presentational bits ---------------------------- */
 
 function NavBtn({ active, onClick, children, dark }) {
   const cls = active ? (dark ? 'text-emerald-400 bg-emerald-500/10' : 'text-emerald-700 bg-emerald-50') : (dark ? 'text-slate-400 hover:text-slate-100' : 'text-slate-500 hover:text-slate-800');
@@ -232,8 +216,8 @@ function JobOrbit({ dark }) {
     { Icon: FlaskConical, label: 'Chemical' },
     { Icon: Briefcase, label: 'Non-IT' },
   ];
-  const size = 236;
-  const radius = 100;
+  const size = 200;
+  const radius = 86;
 
   return (
     <div aria-hidden="true" className="relative shrink-0" style={{ width: size, height: size }}>
@@ -246,8 +230,8 @@ function JobOrbit({ dark }) {
               <div className="absolute left-1/2 top-0" style={{ transform: `translate(-50%, ${size / 2 - radius}px)` }}>
                 <div style={{ transform: `rotate(${-angle}deg)` }}>
                   <div className="orbit-icon-counter">
-                    <div title={label} className={`h-11 w-11 rounded-xl border shadow-md flex items-center justify-center ${dark ? 'bg-slate-900 border-slate-700 text-emerald-400' : 'bg-white border-slate-200 text-emerald-600'}`}>
-                      <Icon size={19} />
+                    <div title={label} className={`h-10 w-10 rounded-xl border shadow-md flex items-center justify-center ${dark ? 'bg-slate-900 border-slate-700 text-emerald-400' : 'bg-white border-slate-200 text-emerald-600'}`}>
+                      <Icon size={17} />
                     </div>
                   </div>
                 </div>
@@ -257,8 +241,8 @@ function JobOrbit({ dark }) {
         })}
       </div>
       <div className="absolute inset-0 flex items-center justify-center">
-        <div className={`hub-pulse h-16 w-16 rounded-full flex items-center justify-center ring-4 ${dark ? 'bg-gradient-to-br from-emerald-500 to-emerald-700 ring-slate-950' : 'bg-gradient-to-br from-emerald-400 to-emerald-600 ring-white'}`}>
-          <Leaf size={26} className="text-white" />
+        <div className={`hub-pulse h-14 w-14 rounded-full flex items-center justify-center ring-4 ${dark ? 'bg-gradient-to-br from-emerald-500 to-emerald-700 ring-slate-950' : 'bg-gradient-to-br from-emerald-400 to-emerald-600 ring-white'}`}>
+          <Leaf size={22} className="text-white" />
         </div>
       </div>
       <div className={`float-card absolute -top-1 left-1/2 -translate-x-1/2 rounded-xl border shadow-lg px-3 py-1.5 text-[11px] font-semibold flex items-center gap-1.5 whitespace-nowrap ${dark ? 'bg-slate-900 border-slate-700 text-emerald-400' : 'bg-white border-slate-200 text-emerald-700'}`}>
@@ -448,8 +432,6 @@ function JobDetailModal({ job, saved, onToggleSave, onClose, currentUser, onRequ
   );
 }
 
-/* ---------------------------- auth: email OTP only ---------------------------- */
-
 function AuthModal({ open, onClose, onSendOtp, onVerifyOtp, onGoogle, error, onOpenTC, dark }) {
   const [step, setStep] = useState('email');
   const [name, setName] = useState('');
@@ -606,6 +588,7 @@ function TCModal({ onClose, dark }) {
     </div>
   );
 }
+
 function JobNotFoundModal({ onClose, dark }) {
   useEffect(() => {
     const onKey = (e) => { if (e.key === 'Escape') onClose(); };
@@ -625,6 +608,7 @@ function JobNotFoundModal({ onClose, dark }) {
     </div>
   );
 }
+
 function SkillsInput({ skills, onChange, dark }) {
   const [draft, setDraft] = useState('');
 
@@ -688,16 +672,104 @@ function Toast({ message }) {
 
 /* ---------------------------------- main app ---------------------------------- */
 
-const DEFAULT_FILTERS = { level: 'all', domain: 'all', q: '', loc: 'All Locations', cat: 'All Categories', yearOfStudy: 'all', expYears: 'all', course: 'all' };
+const DEFAULT_FILTERS = { level: 'all', domain: 'all', q: '', loc: 'All Locations', yearOfStudy: 'all', expYears: 'all', course: 'all' };
 
 function expYearsInRange(expStr, bucket) {
   if (bucket === 'all' || !expStr) return true;
   const match = expStr.match(/(\d+)/);
-  if (!match) return true; // free-text like "See official listing" — don't exclude
+  if (!match) return true;
   const years = parseInt(match[1], 10);
   const ranges = { '0-1': [0, 1], '1-3': [1, 3], '3-5': [3, 5], '5-10': [5, 10], '10+': [10, Infinity] };
   const [min, max] = ranges[bucket] || [0, Infinity];
   return years >= min && years <= max;
+}
+
+/* ---- reusable filter panel, used inside the left sidebar ---- */
+function FilterPanel({ filters, setLevel, setYearOfStudy, setExpYears, setCourse, setDomain, setLoc, searchInput, setSearchInput, clearFilters, LOCATIONS, dark }) {
+  return (
+    <div className={card3D(dark, 'rounded-2xl p-4 space-y-5')}>
+      <div>
+        <div className={`text-[11px] uppercase tracking-wide font-semibold mb-2 ${dark ? 'text-slate-500' : 'text-slate-400'}`}>Search</div>
+        <div className="relative">
+          <Search size={16} className={`absolute left-3 top-1/2 -translate-y-1/2 ${dark ? 'text-slate-500' : 'text-slate-400'}`} />
+          <input
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
+            placeholder="Role, company or skill…"
+            className={inputCls(dark) + ' h-11 pl-9 pr-3 rounded-xl'}
+          />
+        </div>
+      </div>
+
+      <div>
+        <div className={`text-[11px] uppercase tracking-wide font-semibold mb-2 ${dark ? 'text-slate-500' : 'text-slate-400'}`}>Location</div>
+        <select value={filters.loc} onChange={(e) => setLoc(e.target.value)} className={selectCls(dark) + ' w-full'}>
+          <option>All Locations</option>
+          {LOCATIONS.map((l) => <option key={l}>{l}</option>)}
+        </select>
+      </div>
+
+      <div>
+        <div className={`text-[11px] uppercase tracking-wide font-semibold mb-2 ${dark ? 'text-slate-500' : 'text-slate-400'}`}>Role type</div>
+        <div className="flex flex-wrap gap-2">
+          {[['all', 'All roles'], ['it', 'IT roles'], ['nonit', 'Non-IT roles']].map(([val, label]) => (
+            <button key={val} onClick={() => setDomain(val)} className={pillCls(dark, filters.domain === val)}>{label}</button>
+          ))}
+        </div>
+      </div>
+
+      <div>
+        <div className={`text-[11px] uppercase tracking-wide font-semibold mb-2 ${dark ? 'text-slate-500' : 'text-slate-400'}`}>Experience level</div>
+        <div className="flex flex-wrap gap-2">
+          {[['all', 'All levels'], ['fresher', 'Freshers'], ['experienced', 'Experienced']].map(([val, label]) => (
+            <button key={val} onClick={() => setLevel(val)} className={pillCls(dark, filters.level === val)}>{label}</button>
+          ))}
+        </div>
+
+        {filters.level === 'fresher' && (
+          <div className="mt-3">
+            <div className={`text-[11px] uppercase tracking-wide font-semibold mb-2 ${dark ? 'text-slate-500' : 'text-slate-400'}`}>Which year are you in?</div>
+            <select value={filters.yearOfStudy} onChange={(e) => setYearOfStudy(e.target.value)} className={selectCls(dark) + ' w-full'}>
+              <option value="all">Select year</option>
+              <option value="1">1st Year</option>
+              <option value="2">2nd Year</option>
+              <option value="3">3rd Year</option>
+              <option value="4">4th Year</option>
+              <option value="final">Final Year</option>
+              <option value="passed">Passed Out</option>
+            </select>
+          </div>
+        )}
+
+        {filters.level === 'experienced' && (
+          <div className="mt-3">
+            <div className={`text-[11px] uppercase tracking-wide font-semibold mb-2 ${dark ? 'text-slate-500' : 'text-slate-400'}`}>Years of experience</div>
+            <select value={filters.expYears} onChange={(e) => setExpYears(e.target.value)} className={selectCls(dark) + ' w-full'}>
+              <option value="all">Any</option>
+              <option value="0-1">0–1 years</option>
+              <option value="1-3">1–3 years</option>
+              <option value="3-5">3–5 years</option>
+              <option value="5-10">5–10 years</option>
+              <option value="10+">10+ years</option>
+            </select>
+          </div>
+        )}
+      </div>
+
+      <div>
+        <div className={`text-[11px] uppercase tracking-wide font-semibold mb-2 ${dark ? 'text-slate-500' : 'text-slate-400'}`}>Course / degree background</div>
+        <select value={filters.course} onChange={(e) => setCourse(e.target.value)} className={selectCls(dark) + ' w-full'}>
+          <option value="all">All courses</option>
+          {COURSE_CATEGORIES.map((c) => <option key={c.key} value={c.key}>{c.label}</option>)}
+          <option value="general">Any graduate / general</option>
+        </select>
+      </div>
+
+      <button onClick={clearFilters} className={`w-full h-10 rounded-lg border text-sm font-medium transition-all duration-150 hover:-translate-y-0.5 active:translate-y-0 active:scale-95 ${dark ? 'border-slate-700 text-slate-300 hover:border-slate-600' : 'border-slate-200 text-slate-600 hover:border-slate-300'}`}>
+        Clear all filters
+      </button>
+    </div>
+  );
 }
 
 export default function App() {
@@ -718,36 +790,29 @@ export default function App() {
   const [showBanner, setShowBanner] = useState(true);
   const [mobileNav, setMobileNav] = useState(false);
   const [toast, setToast] = useState(null);
-  const [draftFilters, setDraftFilters] = useState(DEFAULT_FILTERS);
-  const [filters, setFilters] = useState(DEFAULT_FILTERS);
-  const applyFilters = () => setFilters(draftFilters);
-  const clearFilters = () => {
-    setDraftFilters(DEFAULT_FILTERS);
-    setFilters(DEFAULT_FILTERS);
-  };
 
-  // auto-apply helpers — clicking these updates `filters` immediately,
-  // no need to press the Search button
-  const setLevel = (val) => {
-    const next = { ...draftFilters, level: val, yearOfStudy: 'all', expYears: 'all' };
-    setDraftFilters(next);
-    setFilters(next);
+  // --- filters: everything here applies immediately, no "Search" button ---
+  const [filters, setFilters] = useState(DEFAULT_FILTERS);
+  const [searchInput, setSearchInput] = useState('');
+
+  // debounce the free-text search so it doesn't refilter on every keystroke
+  useEffect(() => {
+    const t = setTimeout(() => {
+      setFilters((f) => ({ ...f, q: searchInput }));
+    }, 300);
+    return () => clearTimeout(t);
+  }, [searchInput]);
+
+  const clearFilters = () => {
+    setFilters(DEFAULT_FILTERS);
+    setSearchInput('');
   };
-  const setYearOfStudy = (val) => {
-    const next = { ...draftFilters, yearOfStudy: val };
-    setDraftFilters(next);
-    setFilters(next);
-  };
-  const setExpYears = (val) => {
-    const next = { ...draftFilters, expYears: val };
-    setDraftFilters(next);
-    setFilters(next);
-  };
-  const setCourse = (val) => {
-    const next = { ...draftFilters, course: val };
-    setDraftFilters(next);
-    setFilters(next);
-  };
+  const setLevel = (val) => setFilters((f) => ({ ...f, level: val, yearOfStudy: 'all', expYears: 'all' }));
+  const setYearOfStudy = (val) => setFilters((f) => ({ ...f, yearOfStudy: val }));
+  const setExpYears = (val) => setFilters((f) => ({ ...f, expYears: val }));
+  const setCourse = (val) => setFilters((f) => ({ ...f, course: val }));
+  const setDomain = (val) => setFilters((f) => ({ ...f, domain: val }));
+  const setLoc = (val) => setFilters((f) => ({ ...f, loc: val }));
 
   const toastTimer = useRef(null);
 
@@ -761,7 +826,6 @@ export default function App() {
     try { localStorage.setItem('cb-theme', next); } catch (e) { /* ignore */ }
   };
 
-  // --- auth session ---
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
       setSession(data.session);
@@ -773,7 +837,6 @@ export default function App() {
     return () => listener.subscription.unsubscribe();
   }, []);
 
-  // --- live jobs from Supabase ---
   useEffect(() => {
     supabase
       .from('jobs')
@@ -839,7 +902,6 @@ export default function App() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  // --- email OTP: step 1, send the code ---
   const sendEmailOtp = async (name, email) => {
     const cleanEmail = email.trim().toLowerCase();
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanEmail)) {
@@ -858,7 +920,6 @@ export default function App() {
     return { ok: true };
   };
 
-  // --- email OTP: step 2, verify the code ---
   const handleVerifyOtp = async (email, code) => {
     const { error } = await supabase.auth.verifyOtp({
       email,
@@ -939,7 +1000,6 @@ export default function App() {
   };
 
   const LOCATIONS = useMemo(() => Array.from(new Set(jobs.map((j) => j.city))).sort(), [jobs]);
-  const CATEGORIES = useMemo(() => Array.from(new Set(jobs.map((j) => j.category))).sort(), [jobs]);
   const COMPANIES = useMemo(() => Array.from(new Set(jobs.map((j) => j.company))), [jobs]);
 
   const filteredJobs = useMemo(() => {
@@ -951,7 +1011,6 @@ export default function App() {
       if (filters.domain === 'it' && !job.isIT) return false;
       if (filters.domain === 'nonit' && job.isIT) return false;
       if (filters.loc !== 'All Locations' && job.city !== filters.loc) return false;
-      if (filters.cat !== 'All Categories' && job.category !== filters.cat) return false;
       if (q) {
         const tokens = q.split(/[\s,]+/).filter(Boolean);
         const hay = `${job.company} ${job.role} ${job.category} ${job.city} ${job.skills.join(' ')}`.toLowerCase();
@@ -994,7 +1053,6 @@ export default function App() {
 
   return (
     <div className={`min-h-screen font-body ${dark ? 'bg-slate-950 text-slate-50' : 'bg-slate-50 text-slate-900'}`}>
-      {/* nav */}
       <div className={`border-b sticky top-0 z-40 backdrop-blur shadow-[0_2px_2px_rgba(0,0,0,0.03),0_8px_20px_-10px_rgba(15,23,42,0.15)] ${dark ? 'bg-slate-950/95 border-slate-800' : 'bg-white/95 border-slate-200'}`}>
         <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
           <button onClick={goHome} className="flex items-center gap-2 shrink-0 transition-transform hover:-translate-y-0.5 active:translate-y-0 active:scale-95">
@@ -1044,169 +1102,105 @@ export default function App() {
 
       <main className="max-w-6xl mx-auto px-4 sm:px-6 py-8">
         {page === 'home' && (
-          <>
-            <section className={`relative overflow-hidden mb-8 rounded-3xl border p-6 sm:p-8 bg-gradient-to-br shadow-[0_1px_1px_rgba(0,0,0,0.03),0_20px_50px_-24px_rgba(15,23,42,0.35)] ${dark ? 'from-emerald-500/5 via-slate-950 to-indigo-500/5 border-slate-800' : 'from-emerald-50 via-white to-indigo-50 border-slate-200'}`}>
-              <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6 mb-6">
-                <div className="flex-1 min-w-0">
-                  <div className="text-xs font-semibold text-emerald-600 uppercase tracking-widest mb-2">Fresher & experienced roles · Across India</div>
-                  <h1 className={`font-display text-3xl sm:text-4xl font-extrabold leading-tight max-w-xl ${dark ? 'text-slate-50' : 'text-slate-900'}`}>New roles land here first. Yours could be next.</h1>
-                  <p className={`mt-2 max-w-lg text-sm sm:text-base ${dark ? 'text-slate-400' : 'text-slate-600'}`}>Freshers to veterans, IT to everything else — filter it your way, then jump straight to the company's own site and apply. Always free.</p>
-                </div>
-                <div className="hidden lg:flex shrink-0 justify-center">
-                  <JobOrbit dark={dark} />
-                </div>
-              </div>
+          <div className="flex flex-col lg:flex-row gap-6">
+            {/* --- left sidebar: all filters live here now --- */}
+            <aside className="lg:w-72 shrink-0 lg:sticky lg:top-20 lg:self-start lg:max-h-[calc(100vh-6rem)] lg:overflow-y-auto">
+              <FilterPanel
+                filters={filters}
+                setLevel={setLevel}
+                setYearOfStudy={setYearOfStudy}
+                setExpYears={setExpYears}
+                setCourse={setCourse}
+                setDomain={setDomain}
+                setLoc={setLoc}
+                searchInput={searchInput}
+                setSearchInput={setSearchInput}
+                clearFilters={clearFilters}
+                LOCATIONS={LOCATIONS}
+                dark={dark}
+              />
+            </aside>
 
-              <div className="relative z-10 flex gap-3 overflow-x-auto pb-1 mb-6">
-                <StatTile value={jobs.length} label="Live roles" dark={dark} />
-                <StatTile value={jobs.filter((j) => j.daysAgo === 0).length} label="New today" dark={dark} />
-                <StatTile value={COMPANIES.length} label="Employers" dark={dark} />
-              </div>
-
-              <div className={card3D(dark, 'relative z-10 rounded-2xl p-3 sm:p-4')}>
-                <div className="flex flex-col md:flex-row gap-3">
-                  <div className="relative flex-1">
-                    <Search size={16} className={`absolute left-3 top-1/2 -translate-y-1/2 ${dark ? 'text-slate-500' : 'text-slate-400'}`} />
-                    <input
-                      value={draftFilters.q}
-                      onChange={(e) => setDraftFilters((f) => ({ ...f, q: e.target.value }))}
-                      onKeyDown={(e) => { if (e.key === 'Enter') applyFilters(); }}
-                      placeholder="Search role, company or skill…"
-                      className={inputCls(dark) + ' h-11 pl-9 pr-3 rounded-xl'}
-                    />
-                  </div>
-                  <select value={draftFilters.loc} onChange={(e) => setDraftFilters((f) => ({ ...f, loc: e.target.value }))} className={selectCls(dark)}>
-                    <option>All Locations</option>
-                    {LOCATIONS.map((l) => <option key={l}>{l}</option>)}
-                  </select>
-                  <select value={draftFilters.cat} onChange={(e) => setDraftFilters((f) => ({ ...f, cat: e.target.value }))} className={selectCls(dark)}>
-                    <option>All Categories</option>
-                    {CATEGORIES.map((c) => <option key={c}>{c}</option>)}
-                  </select>
-                  <button onClick={applyFilters} className={`h-11 px-6 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-sm shrink-0 flex items-center justify-center gap-2 ${btn3D(dark)}`}>
-                    <Search size={15} /> Search
-                  </button>
-                </div>
-
-                <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div className={`rounded-xl border p-3 shadow-[inset_0_1px_3px_rgba(0,0,0,0.06)] ${dark ? 'border-slate-800 bg-slate-800/30' : 'border-slate-100 bg-slate-50'}`}>
-                    <div className={`text-[11px] uppercase tracking-wide font-semibold mb-2 ${dark ? 'text-slate-500' : 'text-slate-400'}`}>Role type</div>
-                    <div className="no-scrollbar flex gap-2 overflow-x-auto pb-1">
-                      {[['all', 'All roles'], ['it', 'IT roles'], ['nonit', 'Non-IT roles']].map(([val, label]) => (
-                        <button key={val} onClick={() => setDraftFilters((f) => ({ ...f, domain: val }))} className={`shrink-0 h-9 px-4 rounded-full text-sm font-medium border transition-all duration-150 hover:-translate-y-0.5 active:translate-y-0 active:scale-95 ${draftFilters.domain === val ? 'bg-emerald-600 text-white border-emerald-600 shadow-[0_3px_0_0_rgba(4,120,87,1)]' : (dark ? 'border-slate-700 text-slate-300 hover:border-slate-600' : 'border-slate-200 text-slate-600 hover:border-slate-300')}`}>{label}</button>
-                      ))}
+            {/* --- right side: hero + listings --- */}
+            <div className="flex-1 min-w-0">
+              <section className={`relative overflow-hidden mb-8 rounded-3xl border p-6 sm:p-8 bg-gradient-to-br shadow-[0_1px_1px_rgba(0,0,0,0.03),0_20px_50px_-24px_rgba(15,23,42,0.35)] ${dark ? 'from-emerald-500/5 via-slate-950 to-indigo-500/5 border-slate-800' : 'from-emerald-50 via-white to-indigo-50 border-slate-200'}`}>
+                <div className="relative z-10 flex flex-col xl:flex-row xl:items-center justify-between gap-6">
+                  <div className="flex-1 min-w-0">
+                    <div className="text-xs font-semibold text-emerald-600 uppercase tracking-widest mb-2">Fresher & experienced roles · Across India</div>
+                    <h1 className={`font-display text-3xl sm:text-4xl font-extrabold leading-tight max-w-xl ${dark ? 'text-slate-50' : 'text-slate-900'}`}>New roles land here first. Yours could be next.</h1>
+                    <p className={`mt-2 max-w-lg text-sm sm:text-base ${dark ? 'text-slate-400' : 'text-slate-600'}`}>Freshers to veterans, IT to everything else — set your filters on the left, then jump straight to the company's own site and apply. Always free.</p>
+                    <div className="flex gap-3 overflow-x-auto pb-1 mt-5">
+                      <StatTile value={jobs.length} label="Live roles" dark={dark} />
+                      <StatTile value={jobs.filter((j) => j.daysAgo === 0).length} label="New today" dark={dark} />
+                      <StatTile value={COMPANIES.length} label="Employers" dark={dark} />
                     </div>
                   </div>
+                  <div className="hidden xl:flex shrink-0 justify-center">
+                    <JobOrbit dark={dark} />
+                  </div>
+                </div>
+              </section>
 
-                  <div className={`rounded-xl border p-3 shadow-[inset_0_1px_3px_rgba(0,0,0,0.06)] ${dark ? 'border-slate-800 bg-slate-800/30' : 'border-slate-100 bg-slate-50'}`}>
-                    <div className={`text-[11px] uppercase tracking-wide font-semibold mb-2 ${dark ? 'text-slate-500' : 'text-slate-400'}`}>Experience level</div>
-                    <div className="no-scrollbar flex gap-2 overflow-x-auto pb-1">
-                      {[['all', 'All levels'], ['fresher', 'Freshers'], ['experienced', 'Experienced']].map(([val, label]) => (
-                        <button key={val} onClick={() => setLevel(val)} className={`shrink-0 h-9 px-4 rounded-full text-sm font-medium border transition-all duration-150 hover:-translate-y-0.5 active:translate-y-0 active:scale-95 ${draftFilters.level === val ? 'bg-emerald-600 text-white border-emerald-600 shadow-[0_3px_0_0_rgba(4,120,87,1)]' : (dark ? 'border-slate-700 text-slate-300 hover:border-slate-600' : 'border-slate-200 text-slate-600 hover:border-slate-300')}`}>{label}</button>
-                      ))}
-                    </div>
-
-                    {draftFilters.level === 'fresher' && (
-                      <div className="mt-3">
-                        <div className={`text-[11px] uppercase tracking-wide font-semibold mb-2 ${dark ? 'text-slate-500' : 'text-slate-400'}`}>Which year are you in?</div>
-                        <select value={draftFilters.yearOfStudy} onChange={(e) => setYearOfStudy(e.target.value)} className={selectCls(dark) + ' w-full md:w-auto'}>
-                          <option value="all">Select year</option>
-                          <option value="1">1st Year</option>
-                          <option value="2">2nd Year</option>
-                          <option value="3">3rd Year</option>
-                          <option value="4">4th Year</option>
-                          <option value="final">Final Year</option>
-                          <option value="passed">Passed Out</option>
-                        </select>
+              {jobsLoading ? (
+                <div className={`text-center py-16 border border-dashed rounded-2xl ${dark ? 'border-slate-700 bg-slate-900' : 'border-slate-300 bg-white'}`}>
+                  <p className={dark ? 'text-slate-300' : 'text-slate-600'}>Loading roles…</p>
+                </div>
+              ) : jobs.length === 0 ? (
+                <div className={`text-center py-16 border border-dashed rounded-2xl ${dark ? 'border-slate-700 bg-slate-900' : 'border-slate-300 bg-white'}`}>
+                  <p className={dark ? 'text-slate-200 font-medium' : 'text-slate-700 font-medium'}>No roles yet.</p>
+                  <p className={`text-sm mt-1 ${dark ? 'text-slate-500' : 'text-slate-400'}`}>The daily sync hasn't populated any jobs yet — trigger it manually from your GitHub repo's Actions tab, then refresh this page.</p>
+                </div>
+              ) : (
+                <>
+                  {recommended.length > 0 && (
+                    <section className="mb-8">
+                      <div className="flex items-center gap-2 mb-3 flex-wrap">
+                        <Sparkles size={16} className="text-emerald-600" />
+                        <h2 className={`font-display font-bold text-lg ${dark ? 'text-slate-100' : 'text-slate-900'}`}>Matched for you</h2>
+                        <span className={`text-xs ${dark ? 'text-slate-500' : 'text-slate-500'}`}>based on the skills saved in your profile</span>
                       </div>
-                    )}
-
-                    {draftFilters.level === 'experienced' && (
-                      <div className="mt-3">
-                        <div className={`text-[11px] uppercase tracking-wide font-semibold mb-2 ${dark ? 'text-slate-500' : 'text-slate-400'}`}>Years of experience</div>
-                        <select value={draftFilters.expYears} onChange={(e) => setExpYears(e.target.value)} className={selectCls(dark) + ' w-full md:w-auto'}>
-                          <option value="all">Any</option>
-                          <option value="0-1">0–1 years</option>
-                          <option value="1-3">1–3 years</option>
-                          <option value="3-5">3–5 years</option>
-                          <option value="5-10">5–10 years</option>
-                          <option value="10+">10+ years</option>
-                        </select>
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                <div className={`mt-3 rounded-xl border p-3 shadow-[inset_0_1px_3px_rgba(0,0,0,0.06)] ${dark ? 'border-slate-800 bg-slate-800/30' : 'border-slate-100 bg-slate-50'}`}>
-                  <div className={`text-[11px] uppercase tracking-wide font-semibold mb-2 ${dark ? 'text-slate-500' : 'text-slate-400'}`}>Course / degree background</div>
-                  <select value={draftFilters.course} onChange={(e) => setCourse(e.target.value)} className={selectCls(dark) + ' w-full md:w-auto'}>
-                    <option value="all">All courses</option>
-                    {COURSE_CATEGORIES.map((c) => <option key={c.key} value={c.key}>{c.label}</option>)}
-                    <option value="general">Any graduate / general</option>
-                  </select>
-                </div>
-              </div>
-            </section>
-
-            {jobsLoading ? (
-              <div className={`text-center py-16 border border-dashed rounded-2xl ${dark ? 'border-slate-700 bg-slate-900' : 'border-slate-300 bg-white'}`}>
-                <p className={dark ? 'text-slate-300' : 'text-slate-600'}>Loading roles…</p>
-              </div>
-            ) : jobs.length === 0 ? (
-              <div className={`text-center py-16 border border-dashed rounded-2xl ${dark ? 'border-slate-700 bg-slate-900' : 'border-slate-300 bg-white'}`}>
-                <p className={dark ? 'text-slate-200 font-medium' : 'text-slate-700 font-medium'}>No roles yet.</p>
-                <p className={`text-sm mt-1 ${dark ? 'text-slate-500' : 'text-slate-400'}`}>The daily sync hasn't populated any jobs yet — trigger it manually from your GitHub repo's Actions tab, then refresh this page.</p>
-              </div>
-            ) : (
-              <>
-                {recommended.length > 0 && (
-                  <section className="mb-8">
-                    <div className="flex items-center gap-2 mb-3 flex-wrap">
-                      <Sparkles size={16} className="text-emerald-600" />
-                      <h2 className={`font-display font-bold text-lg ${dark ? 'text-slate-100' : 'text-slate-900'}`}>Matched for you</h2>
-                      <span className={`text-xs ${dark ? 'text-slate-500' : 'text-slate-500'}`}>based on the skills saved in your profile</span>
-                    </div>
-                    <Carousel dark={dark} items={recommended} renderItem={(job) => <JobCard {...jobCardProps(job, true)} />} />
-                  </section>
-                )}
-                {currentUser && recommended.length === 0 && (
-                  <div className={`mb-8 border rounded-xl px-4 py-3 text-sm ${dark ? 'border-slate-800 bg-slate-900 text-slate-400' : 'border-slate-200 bg-white text-slate-500'}`}>
-                    Add a few skills in <button onClick={() => setPage('profile')} className={dark ? 'text-emerald-400 underline underline-offset-2' : 'text-emerald-700 underline underline-offset-2'}>your profile</button> and we'll match roles to you here.
-                  </div>
-                )}
-
-                <section>
-                  <div className="flex items-center justify-between mb-3">
-                    <h2 className={`font-display font-bold text-lg ${dark ? 'text-slate-100' : 'text-slate-900'}`}>
-                      {filters.domain === 'it' ? 'IT roles' : filters.domain === 'nonit' ? 'Non-IT roles' : 'All roles'} <span className={`font-normal text-sm ${dark ? 'text-slate-500' : 'text-slate-400'}`}>({filteredJobs.length})</span>
-                    </h2>
-                    <span className={`text-xs hidden sm:inline ${dark ? 'text-slate-500' : 'text-slate-400'}`}>Sorted by newest first</span>
-                  </div>
-                  {filteredJobs.length === 0 ? (
-                    <div className={`text-center py-16 border border-dashed rounded-2xl ${dark ? 'border-slate-700 bg-slate-900' : 'border-slate-300 bg-white'}`}>
-                      <p className={dark ? 'text-slate-200 font-medium' : 'text-slate-700 font-medium'}>No roles match these filters yet.</p>
-                      <p className={`text-sm mt-1 ${dark ? 'text-slate-500' : 'text-slate-400'}`}>Try clearing a filter, or check back after the next sync.</p>
-                      <button onClick={clearFilters} className={`mt-4 h-9 px-4 rounded-lg border text-sm transition-all duration-150 hover:-translate-y-0.5 active:translate-y-0 active:scale-95 ${dark ? 'border-slate-700 text-slate-300 hover:border-slate-600' : 'border-slate-200 text-slate-600 hover:border-slate-300'}`}>Clear filters</button>
-                    </div>
-                  ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {filteredJobs.map((job) => <JobCard key={job.id} {...jobCardProps(job, false)} />)}
+                      <Carousel dark={dark} items={recommended} renderItem={(job) => <JobCard {...jobCardProps(job, true)} />} />
+                    </section>
+                  )}
+                  {currentUser && recommended.length === 0 && (
+                    <div className={`mb-8 border rounded-xl px-4 py-3 text-sm ${dark ? 'border-slate-800 bg-slate-900 text-slate-400' : 'border-slate-200 bg-white text-slate-500'}`}>
+                      Add a few skills in <button onClick={() => setPage('profile')} className={dark ? 'text-emerald-400 underline underline-offset-2' : 'text-emerald-700 underline underline-offset-2'}>your profile</button> and we'll match roles to you here.
                     </div>
                   )}
-                </section>
-              </>
-            )}
 
-            {!currentUser && (
-              <div className={`mt-8 border rounded-2xl p-5 sm:p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 transition-all duration-300 hover:-translate-y-1 ${dark ? 'border-emerald-800 bg-emerald-500/5 shadow-[0_10px_30px_-14px_rgba(16,185,129,0.35)] hover:shadow-[0_18px_40px_-14px_rgba(16,185,129,0.45)]' : 'border-emerald-200 bg-emerald-50 shadow-[0_10px_30px_-14px_rgba(16,185,129,0.3)] hover:shadow-[0_18px_40px_-14px_rgba(16,185,129,0.4)]'}`}>
-                <div>
-                  <div className={`font-display font-bold text-base ${dark ? 'text-slate-100' : 'text-slate-900'}`}>Get roles matched to you</div>
-                  <div className={`text-sm mt-1 ${dark ? 'text-slate-400' : 'text-slate-600'}`}>Create a free account to unlock Apply, save roles, and see picks based on your skills.</div>
+                  <section>
+                    <div className="flex items-center justify-between mb-3">
+                      <h2 className={`font-display font-bold text-lg ${dark ? 'text-slate-100' : 'text-slate-900'}`}>
+                        {filters.domain === 'it' ? 'IT roles' : filters.domain === 'nonit' ? 'Non-IT roles' : 'All roles'} <span className={`font-normal text-sm ${dark ? 'text-slate-500' : 'text-slate-400'}`}>({filteredJobs.length})</span>
+                      </h2>
+                      <span className={`text-xs hidden sm:inline ${dark ? 'text-slate-500' : 'text-slate-400'}`}>Sorted by newest first</span>
+                    </div>
+                    {filteredJobs.length === 0 ? (
+                      <div className={`text-center py-16 border border-dashed rounded-2xl ${dark ? 'border-slate-700 bg-slate-900' : 'border-slate-300 bg-white'}`}>
+                        <p className={dark ? 'text-slate-200 font-medium' : 'text-slate-700 font-medium'}>No roles match these filters yet.</p>
+                        <p className={`text-sm mt-1 ${dark ? 'text-slate-500' : 'text-slate-400'}`}>Try clearing a filter, or check back after the next sync.</p>
+                        <button onClick={clearFilters} className={`mt-4 h-9 px-4 rounded-lg border text-sm transition-all duration-150 hover:-translate-y-0.5 active:translate-y-0 active:scale-95 ${dark ? 'border-slate-700 text-slate-300 hover:border-slate-600' : 'border-slate-200 text-slate-600 hover:border-slate-300'}`}>Clear filters</button>
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {filteredJobs.map((job) => <JobCard key={job.id} {...jobCardProps(job, false)} />)}
+                      </div>
+                    )}
+                  </section>
+                </>
+              )}
+
+              {!currentUser && (
+                <div className={`mt-8 border rounded-2xl p-5 sm:p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 transition-all duration-300 hover:-translate-y-1 ${dark ? 'border-emerald-800 bg-emerald-500/5 shadow-[0_10px_30px_-14px_rgba(16,185,129,0.35)] hover:shadow-[0_18px_40px_-14px_rgba(16,185,129,0.45)]' : 'border-emerald-200 bg-emerald-50 shadow-[0_10px_30px_-14px_rgba(16,185,129,0.3)] hover:shadow-[0_18px_40px_-14px_rgba(16,185,129,0.4)]'}`}>
+                  <div>
+                    <div className={`font-display font-bold text-base ${dark ? 'text-slate-100' : 'text-slate-900'}`}>Get roles matched to you</div>
+                    <div className={`text-sm mt-1 ${dark ? 'text-slate-400' : 'text-slate-600'}`}>Create a free account to unlock Apply, save roles, and see picks based on your skills.</div>
+                  </div>
+                  <button onClick={() => { setAuthError(''); setAuthModalOpen(true); }} className={`h-10 px-5 rounded-lg bg-emerald-600 text-white font-semibold shrink-0 hover:bg-emerald-700 ${btn3D(dark)}`}>Sign up free</button>
                 </div>
-                <button onClick={() => { setAuthError(''); setAuthModalOpen(true); }} className={`h-10 px-5 rounded-lg bg-emerald-600 text-white font-semibold shrink-0 hover:bg-emerald-700 ${btn3D(dark)}`}>Sign up free</button>
-              </div>
-            )}
-          </>
+              )}
+            </div>
+          </div>
         )}
 
         {page === 'saved' && currentUser && (
