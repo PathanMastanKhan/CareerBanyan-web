@@ -6,11 +6,13 @@
   <title>CareerBanyan — Jobs for India</title>
   <meta name="description" content="Fresher and experienced job listings across India, updated daily." />
   <link rel="canonical" href="https://careerbanyan.vercel.app/" />
+  <link rel="icon" type="image/png" href="/favicon.png" />
   <meta property="og:title" content="CareerBanyan — Jobs for India" />
   <meta property="og:description" content="Fresher and experienced job listings across India, updated daily." />
   <meta property="og:type" content="website" />
   <meta property="og:url" content="https://careerbanyan.vercel.app/" />
-  <meta name="twitter:card" content="summary" />
+  <meta property="og:image" content="https://careerbanyan.vercel.app/og-image.png" />
+  <meta name="twitter:card" content="summary_large_image" />
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
   <script src="https://cdn.tailwindcss.com"></script>
@@ -22,7 +24,6 @@
     @media (prefers-reduced-motion: reduce){ .fade-in{ animation:none; } }
     .no-scrollbar::-webkit-scrollbar{ display:none; }
     .no-scrollbar{ scrollbar-width:none; }
-
     .orbit-floor{
       background-image: radial-gradient(currentColor 1px, transparent 1px);
       background-size: 22px 22px;
@@ -42,11 +43,9 @@
     }
     .float-card{ animation: floatCard 4.5s ease-in-out infinite; }
     .float-card-delay{ animation-delay: 1.6s; }
-
     @media (prefers-reduced-motion: reduce){
       .orbit-ring, .orbit-icon-counter, .hub-pulse, .float-card{ animation: none; }
     }
-
     @keyframes modalPop3D {
       from { opacity: 0; transform: perspective(1000px) rotateX(8deg) scale(0.94) translateY(16px); }
       to { opacity: 1; transform: perspective(1000px) rotateX(0deg) scale(1) translateY(0); }
