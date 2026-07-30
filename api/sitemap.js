@@ -1,5 +1,4 @@
 import { createClient } from '@supabase/supabase-js';
-
 // IMPORTANT: set SITE_URL in Vercel → Settings → Environment Variables to
 // your actual production domain (no trailing slash). The fallback below is
 // just a safety net — don't rely on it being correct for your deployment.
