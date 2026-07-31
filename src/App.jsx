@@ -45,6 +45,91 @@ function classifyCourseCategory(job) {
   return 'general';
 }
 
+// A curated list of real, recognizable skills/tools/competencies across every
+// course category this site supports. Profile "skills" are checked against
+// this list (case-insensitive, loosely) so people can only add actual skills
+// — not their own name, a random word, or a tag — into their profile.
+const KNOWN_SKILLS = [
+  // Engineering / IT
+  'java', 'python', 'c', 'c++', 'c#', 'javascript', 'typescript', 'react', 'react.js', 'node', 'node.js',
+  'angular', 'vue', 'vue.js', 'html', 'css', 'sql', 'mysql', 'postgresql', 'mongodb', 'firebase',
+  'aws', 'azure', 'gcp', 'google cloud', 'docker', 'kubernetes', 'git', 'github', 'linux', 'unix',
+  'devops', 'ci/cd', 'jenkins', 'rest api', 'graphql', 'microservices', 'machine learning', 'deep learning',
+  'artificial intelligence', 'data structures', 'algorithms', 'oop', 'dbms', 'operating systems',
+  'computer networks', 'autocad', 'solidworks', 'ansys', 'catia', 'creo', 'matlab', 'simulink',
+  'embedded systems', 'embedded c', 'plc', 'scada', 'vlsi', 'verilog', 'networking', 'cybersecurity',
+  'ethical hacking', 'penetration testing', 'android', 'android development', 'ios', 'ios development',
+  'flutter', 'kotlin', 'swift', 'php', 'ruby', 'ruby on rails', 'golang', 'go', 'rust', 'scala',
+  '.net', 'asp.net', 'spring', 'spring boot', 'django', 'flask', 'fastapi', 'selenium', 'manual testing',
+  'automation testing', 'software testing', 'sap', 'sap abap', 'salesforce', 'power bi', 'tableau',
+  'excel', 'advanced excel', 'vba', 'r', 'r programming', 'hadoop', 'spark', 'big data', 'data science',
+  'data analysis', 'data analytics', 'data engineering', 'etl', 'blockchain', 'iot', 'ar/vr', 'unity',
+  'unreal engine', 'ui/ux', 'ui design', 'ux design', 'figma', 'wordpress', 'shopify', 'jira',
+  'agile', 'scrum', 'it support', 'network administration', 'system administration', 'cloud computing',
+  // Science
+  'biology', 'microbiology', 'biotechnology', 'bioinformatics', 'chemistry', 'physics', 'zoology',
+  'botany', 'genetics', 'biochemistry', 'lab techniques', 'lab technician', 'research methodology',
+  'statistics', 'gis', 'environmental science', 'food technology', 'nanotechnology',
+  // Pharmacy
+  'pharmacology', 'pharmacovigilance', 'clinical research', 'clinical trials', 'drug safety',
+  'quality control', 'quality assurance', 'gmp', 'regulatory affairs', 'formulation development',
+  'medical coding', 'medical representative',
+  // Commerce / finance
+  'accounting', 'financial accounting', 'tally', 'tally erp', 'gst', 'taxation', 'income tax',
+  'auditing', 'bookkeeping', 'financial analysis', 'financial modeling', 'sap fico', 'costing',
+  'banking', 'investment banking', 'equity research', 'stock market', 'mutual funds', 'insurance',
+  'payroll', 'budgeting', 'cost accounting', 'ca', 'cma', 'cfa',
+  // Management / marketing / hr
+  'marketing', 'digital marketing', 'seo', 'sem', 'social media marketing', 'content marketing',
+  'email marketing', 'brand management', 'sales', 'business development', 'business analysis',
+  'operations management', 'project management', 'product management', 'supply chain management',
+  'logistics', 'procurement', 'human resources', 'hr', 'recruitment', 'talent acquisition',
+  'payroll management', 'employee engagement', 'training and development', 'customer relationship management',
+  'crm', 'event management', 'retail management', 'e-commerce', 'negotiation',
+  // Law
+  'legal drafting', 'contract law', 'corporate law', 'litigation', 'compliance', 'paralegal',
+  'intellectual property', 'legal research', 'labour law', 'criminal law', 'civil law', 'llb',
+  // Arts / humanities / media
+  'content writing', 'copywriting', 'technical writing', 'creative writing', 'journalism',
+  'editing', 'proofreading', 'translation', 'teaching', 'tutoring', 'social work', 'counselling',
+  'graphic design', 'photography', 'videography', 'video editing', 'animation', 'illustration',
+  'public relations', 'mass communication', 'psychology', 'history', 'political science', 'economics',
+  // General / soft skills
+  'communication', 'communication skills', 'leadership', 'teamwork', 'problem solving',
+  'critical thinking', 'time management', 'customer service', 'presentation skills', 'ms office',
+  'microsoft office', 'powerpoint', 'word', 'typing', 'data entry', 'analytical skills',
+];
+
+function normalizeSkillText(s) {
+  return s.toLowerCase().trim().replace(/[.\-_]/g, ' ').replace(/\s+/g, ' ');
+}
+
+function isKnownSkill(value) {
+  const norm = normalizeSkillText(value);
+  return KNOWN_SKILLS.some((k) => {
+    const nk = normalizeSkillText(k);
+    if (norm === nk) return true;
+    // Only allow "contains" matching (e.g. "React JS" vs "react") once both
+    // sides are at least 4 characters — short entries like "hr" or "go"
+    // would otherwise false-match as substrings of unrelated words (e.g.
+    // "hr" is hiding inside the surname "Sharma").
+    if (norm.length >= 4 && nk.length >= 4 && (norm.includes(nk) || nk.includes(norm))) return true;
+    return false;
+  });
+}
+
+function looksLikePersonName(value, currentUser) {
+  const norm = normalizeSkillText(value);
+  if (!norm) return false;
+  if (currentUser) {
+    const name = normalizeSkillText(currentUser.name || '');
+    const emailLocal = normalizeSkillText((currentUser.email || '').split('@')[0] || '');
+    if (name && (norm === name || name.includes(norm))) return true;
+    if (emailLocal && (norm === emailLocal || emailLocal.includes(norm))) return true;
+  }
+  return false;
+}
+
 function setMetaTag(attrName, attrValue, content) {
   let tag = document.head.querySelector(`meta[${attrName}="${attrValue}"]`);
   if (!tag) {
@@ -573,6 +658,41 @@ function AuthModal({ open, onClose, onSendOtp, onVerifyOtp, onGoogle, error, onO
   );
 }
 
+function PhoneGateModal({ open, name, phoneDraft, setPhoneDraft, phoneError, phoneBusy, onSubmit, dark }) {
+  // Intentionally has NO close button, no backdrop-click-to-close, and no
+  // Escape handler — adding a phone number is mandatory before the rest of
+  // the site is usable, per product requirement #7.
+  if (!open) return null;
+  const panelBg = dark ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200';
+
+  return (
+    <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-slate-900/70 backdrop-blur-sm">
+      <div className={`modal-pop-3d w-full max-w-md border rounded-2xl shadow-[0_40px_80px_-20px_rgba(0,0,0,0.5)] p-6 ${panelBg}`}>
+        <h2 className={`font-display text-xl font-bold mb-1 ${dark ? 'text-slate-50' : 'text-slate-900'}`}>One last thing{name ? `, ${name.split(' ')[0]}` : ''}</h2>
+        <p className={`text-sm mb-5 ${dark ? 'text-slate-400' : 'text-slate-500'}`}>Add your mobile number so employers and CareerBanyan can reach you about roles. This is required once, and takes a second.</p>
+        <form className="space-y-3" onSubmit={onSubmit}>
+          <Field label="Mobile number" dark={dark}>
+            <input
+              type="tel"
+              inputMode="numeric"
+              autoFocus
+              value={phoneDraft}
+              onChange={(e) => setPhoneDraft(e.target.value.replace(/[^\d+\s-]/g, ''))}
+              placeholder="98765 43210"
+              className={inputCls(dark)}
+            />
+          </Field>
+          {phoneError && <div className={`text-sm rounded-lg px-3 py-2 border ${dark ? 'text-red-300 bg-red-500/10 border-red-900' : 'text-red-700 bg-red-50 border-red-200'}`}>{phoneError}</div>}
+          <button type="submit" disabled={phoneBusy} className={`w-full h-11 rounded-lg bg-emerald-600 text-white font-semibold hover:bg-emerald-700 disabled:opacity-60 disabled:translate-y-0 disabled:shadow-none ${btn3D(dark)}`}>
+            {phoneBusy ? 'Saving…' : 'Continue'}
+          </button>
+          <p className={`text-xs text-center ${dark ? 'text-slate-500' : 'text-slate-400'}`}>We'll never share your number without your consent.</p>
+        </form>
+      </div>
+    </div>
+  );
+}
+
 function TCModal({ onClose, dark }) {
   useEffect(() => {
     const onKey = (e) => { if (e.key === 'Escape') onClose(); };
@@ -605,6 +725,43 @@ function TCModal({ onClose, dark }) {
   );
 }
 
+function ConfirmModal({ open, title, body, confirmLabel, onConfirm, onCancel, dark, busy, danger = true }) {
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e) => { if (e.key === 'Escape') onCancel(); };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [open, onCancel]);
+
+  if (!open) return null;
+  const panelBg = dark ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200';
+
+  return (
+    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm" onClick={onCancel}>
+      <div className={`modal-pop-3d w-full max-w-sm border rounded-2xl shadow-[0_40px_80px_-20px_rgba(0,0,0,0.5)] p-6 ${panelBg}`} onClick={(e) => e.stopPropagation()}>
+        <h2 className={`font-display text-lg font-bold mb-2 ${dark ? 'text-slate-100' : 'text-slate-900'}`}>{title}</h2>
+        <p className={`text-sm mb-6 ${dark ? 'text-slate-400' : 'text-slate-500'}`}>{body}</p>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={onCancel}
+            disabled={busy}
+            className={`flex-1 h-10 rounded-lg border text-sm font-medium transition-all duration-150 hover:-translate-y-0.5 active:translate-y-0 active:scale-95 disabled:opacity-60 ${dark ? 'border-slate-700 text-slate-300 hover:border-slate-600' : 'border-slate-200 text-slate-600 hover:border-slate-300'}`}
+          >
+            Cancel
+          </button>
+          <button
+            onClick={onConfirm}
+            disabled={busy}
+            className={`flex-1 h-10 rounded-lg text-white text-sm font-semibold disabled:opacity-60 ${danger ? `bg-red-600 hover:bg-red-700 ${btn3D(dark, 'red')}` : `bg-emerald-600 hover:bg-emerald-700 ${btn3D(dark)}`}`}
+          >
+            {busy ? 'Please wait…' : confirmLabel}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function JobNotFoundModal({ onClose, dark }) {
   useEffect(() => {
     const onKey = (e) => { if (e.key === 'Escape') onClose(); };
@@ -625,7 +782,7 @@ function JobNotFoundModal({ onClose, dark }) {
   );
 }
 
-function SkillsInput({ skills, onChange, dark }) {
+function SkillsInput({ skills, onChange, dark, currentUser }) {
   const [draft, setDraft] = useState('');
   const [skillError, setSkillError] = useState('');
 
@@ -641,8 +798,12 @@ function SkillsInput({ skills, onChange, dark }) {
       setSkillError("That doesn't look like a valid skill.");
       return;
     }
-    if (val.length > 5 && !/[aeiouAEIOU]/.test(val)) {
-      setSkillError("That doesn't look like a valid skill.");
+    if (looksLikePersonName(val, currentUser)) {
+      setSkillError('That looks like a name, not a skill — add things like "Java" or "Content Writing" instead.');
+      return;
+    }
+    if (!isKnownSkill(val)) {
+      setSkillError('We don\u2019t recognize that as a skill yet. Try a specific skill, tool or competency (e.g. "Excel", "Tally", "Digital Marketing").');
       return;
     }
     if (skills.some((s) => s.toLowerCase() === val.toLowerCase())) { setDraft(''); return; }
@@ -671,13 +832,48 @@ function SkillsInput({ skills, onChange, dark }) {
           onChange={(e) => { setDraft(e.target.value); setSkillError(''); }}
           onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addSkill(); } }}
           placeholder="e.g. Java — press Enter or tap Add"
+          list="cb-known-skills"
           className={inputCls(dark)}
         />
+        <datalist id="cb-known-skills">
+          {KNOWN_SKILLS.map((s) => <option key={s} value={s} />)}
+        </datalist>
         <button type="button" onClick={addSkill} className={`h-10 px-4 rounded-lg bg-emerald-600 text-white text-sm font-semibold hover:bg-emerald-700 flex items-center gap-1 shrink-0 ${btn3D(dark)}`}>
           <Plus size={14} /> Add
         </button>
       </div>
     </div>
+  );
+}
+
+function Toggle({ checked, onChange, dark, label }) {
+  // Fixed pixel geometry (not Tailwind spacing classes) so the thumb is
+  // mathematically guaranteed to stay inside the track at every screen size.
+  const TRACK_W = 48;
+  const TRACK_H = 28;
+  const THUMB = 22;
+  const MARGIN = 3;
+  return (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={checked}
+      aria-label={label}
+      onClick={() => onChange(!checked)}
+      style={{ width: TRACK_W, height: TRACK_H, padding: 0 }}
+      className={`shrink-0 relative rounded-full border-none transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 ${checked ? 'bg-emerald-600' : (dark ? 'bg-slate-700' : 'bg-slate-300')}`}
+    >
+      <span
+        className="absolute rounded-full bg-white shadow transition-transform duration-200"
+        style={{
+          top: MARGIN,
+          left: MARGIN,
+          width: THUMB,
+          height: THUMB,
+          transform: `translateX(${checked ? TRACK_W - THUMB - MARGIN * 2 : 0}px)`,
+        }}
+      />
+    </button>
   );
 }
 
@@ -703,20 +899,64 @@ function Toast({ message }) {
 
 /* ---------------------------------- main app ---------------------------------- */
 
-const DEFAULT_FILTERS = { level: 'all', domain: 'all', q: '', loc: 'All Locations', expYears: 'all', course: 'all' };
+const DEFAULT_FILTERS = { level: 'all', domain: 'all', q: '', loc: 'All Locations', expYears: 'all', studyYear: 'all', course: 'all' };
 
-function expYearsInRange(expStr, bucket) {
-  if (bucket === 'all') return true;
-  const match = expStr && expStr.match(/(\d+)/);
-  if (!match) return false;
-  const years = parseInt(match[1], 10);
-  const ranges = { '0-1': [0, 1], '1-3': [1, 3], '3-5': [3, 5], '5-10': [5, 10], '10+': [10, Infinity] };
-  const [min, max] = ranges[bucket] || [0, Infinity];
-  return years >= min && years <= max;
+const STUDY_YEARS = [
+  { key: '1', label: '1st year', keywords: ['1st year', 'first year', 'year 1'] },
+  { key: '2', label: '2nd year', keywords: ['2nd year', 'second year', 'year 2'] },
+  { key: '3', label: '3rd year', keywords: ['3rd year', 'third year', 'year 3'] },
+  { key: '4', label: '4th / final year', keywords: ['4th year', 'fourth year', 'final year', 'year 4', 'last year'] },
+  { key: 'completed', label: 'Completed / graduated', keywords: [] },
+];
+
+// Parses a job's free-text experience string (e.g. "3-5 years", "5+ years",
+// "2 yrs", "Fresher") into a [min, max] range in years. Returns null when the
+// string carries no usable number (e.g. "See official listing"), so callers
+// can tell "doesn't match" apart from "we don't know".
+function parseExperienceRange(expStr) {
+  if (!expStr) return null;
+  const s = String(expStr).toLowerCase();
+  if (/fresher|no experience|entry.?level/.test(s)) return [0, 0];
+  const rangeMatch = s.match(/(\d+)\s*(?:-|to)\s*(\d+)/);
+  if (rangeMatch) return [parseInt(rangeMatch[1], 10), parseInt(rangeMatch[2], 10)];
+  const plusMatch = s.match(/(\d+)\s*\+/);
+  if (plusMatch) return [parseInt(plusMatch[1], 10), Infinity];
+  const singleMatch = s.match(/(\d+)/);
+  if (singleMatch) {
+    const n = parseInt(singleMatch[1], 10);
+    return [n, n];
+  }
+  return null;
+}
+
+// `exactYear` is either 'all', a specific year as a string ('0'..'9'), or
+// '10+'. A job matches if its parsed experience range overlaps that year.
+function expYearsInRange(expStr, exactYear) {
+  if (exactYear === 'all') return true;
+  const range = parseExperienceRange(expStr);
+  if (!range) return false;
+  const [jobMin, jobMax] = range;
+  if (exactYear === '10+') return jobMax >= 10;
+  const year = parseInt(exactYear, 10);
+  return year >= jobMin && year <= jobMax;
+}
+
+// Job postings don't carry a structured "year of study" field the way they
+// carry experience — this is a best-effort keyword match against the role
+// title and description text. "Completed / graduated" intentionally matches
+// everything (it's the default assumption for a fresher-level listing that
+// doesn't call out a specific student year).
+function matchesStudyYear(job, studyYear) {
+  if (studyYear === 'all') return true;
+  if (studyYear === 'completed') return true;
+  const entry = STUDY_YEARS.find((s) => s.key === studyYear);
+  if (!entry || entry.keywords.length === 0) return true;
+  const hay = `${job.role} ${(job.description || []).join(' ')}`.toLowerCase();
+  return entry.keywords.some((k) => hay.includes(k));
 }
 
 /* ---- reusable filter panel, used inside the left sidebar ---- */
-function FilterPanel({ filters, setLevel, setExpYears, setCourse, setDomain, setLoc, searchInput, setSearchInput, clearFilters, LOCATIONS, dark }) {
+function FilterPanel({ filters, setLevel, setExpYears, setStudyYear, setCourse, setDomain, setLoc, searchInput, setSearchInput, clearFilters, LOCATIONS, dark }) {
   return (
     <div className={card3D(dark, 'rounded-2xl p-4 space-y-5')}>
       <div>
@@ -762,11 +1002,20 @@ function FilterPanel({ filters, setLevel, setExpYears, setCourse, setDomain, set
             <div className={`text-[11px] uppercase tracking-wide font-semibold mb-2 ${dark ? 'text-slate-500' : 'text-slate-400'}`}>Years of experience</div>
             <select value={filters.expYears} onChange={(e) => setExpYears(e.target.value)} className={selectCls(dark) + ' w-full'}>
               <option value="all">Any</option>
-              <option value="0-1">0–1 years</option>
-              <option value="1-3">1–3 years</option>
-              <option value="3-5">3–5 years</option>
-              <option value="5-10">5–10 years</option>
+              {['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'].map((y) => (
+                <option key={y} value={y}>{y} year{y === '1' ? '' : 's'}</option>
+              ))}
               <option value="10+">10+ years</option>
+            </select>
+          </div>
+        )}
+
+        {filters.level === 'fresher' && (
+          <div className="mt-3">
+            <div className={`text-[11px] uppercase tracking-wide font-semibold mb-2 ${dark ? 'text-slate-500' : 'text-slate-400'}`}>Year of study</div>
+            <select value={filters.studyYear} onChange={(e) => setStudyYear(e.target.value)} className={selectCls(dark) + ' w-full'}>
+              <option value="all">Any</option>
+              {STUDY_YEARS.map((s) => <option key={s.key} value={s.key}>{s.label}</option>)}
             </select>
           </div>
         )}
@@ -806,6 +1055,11 @@ export default function App() {
   const [showBanner, setShowBanner] = useState(true);
   const [mobileNav, setMobileNav] = useState(false);
   const [toast, setToast] = useState(null);
+  const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
+  const [deleteBusy, setDeleteBusy] = useState(false);
+  const [phoneDraft, setPhoneDraft] = useState('');
+  const [phoneError, setPhoneError] = useState('');
+  const [phoneBusy, setPhoneBusy] = useState(false);
 
   const [filters, setFilters] = useState(DEFAULT_FILTERS);
   const [searchInput, setSearchInput] = useState('');
@@ -821,8 +1075,9 @@ export default function App() {
     setFilters(DEFAULT_FILTERS);
     setSearchInput('');
   };
-  const setLevel = (val) => setFilters((f) => ({ ...f, level: val, expYears: 'all' }));
+  const setLevel = (val) => setFilters((f) => ({ ...f, level: val, expYears: 'all', studyYear: 'all' }));
   const setExpYears = (val) => setFilters((f) => ({ ...f, expYears: val }));
+  const setStudyYear = (val) => setFilters((f) => ({ ...f, studyYear: val }));
   const setCourse = (val) => setFilters((f) => ({ ...f, course: val }));
   const setDomain = (val) => setFilters((f) => ({ ...f, domain: val }));
   const setLoc = (val) => setFilters((f) => ({ ...f, loc: val }));
@@ -851,34 +1106,59 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    supabase
-      .from('jobs')
-      .select('id, company, role, level, is_it, city, category, experience, salary, employment_type, skills, description, posted_at, link')
-      .eq('is_active', true)
-      .order('posted_at', { ascending: false })
-      .limit(500)
-      .then(({ data, error }) => {
-        if (error) { console.error('Failed to load jobs:', error.message); setJobsLoading(false); return; }
-        const mapped = (data || []).map((d) => ({
-          id: d.id,
-          company: d.company,
-          role: d.role,
-          level: d.level,
-          isIT: d.is_it,
-          city: d.city,
-          category: d.category,
-          experience: d.experience || 'See official listing',
-          salary: d.salary,
-          employmentType: d.employment_type || 'Full-time',
-          skills: d.skills || [],
-          description: d.description && d.description.length ? d.description : ['See the official listing for full details.'],
-          daysAgo: Math.max(0, Math.floor((Date.now() - new Date(d.posted_at).getTime()) / 86400000)),
-          link: d.link,
-        }));
-        const withCourses = mapped.map((j) => ({ ...j, courseCategory: classifyCourseCategory(j) }));
-        setJobs(withCourses);
-        setJobsLoading(false);
-      });
+    let cancelled = false;
+
+    // A single .limit(500) request used to cap the whole site at 500 jobs.
+    // Supabase projects also cap each individual request at a max-rows
+    // setting (1000 by default), so instead of one big request we page
+    // through in safe 500-row batches and keep going until either we hit
+    // MAX_JOBS or the server has no more rows to give us.
+    async function loadJobs() {
+      const PAGE_SIZE = 500;
+      const MAX_JOBS = 3000;
+      let all = [];
+      let from = 0;
+      while (all.length < MAX_JOBS) {
+        const to = from + PAGE_SIZE - 1;
+        const { data, error } = await supabase
+          .from('jobs')
+          .select('id, company, role, level, is_it, city, category, experience, salary, employment_type, skills, description, posted_at, link')
+          .eq('is_active', true)
+          .order('posted_at', { ascending: false })
+          .range(from, to);
+        if (error) {
+          console.error('Failed to load jobs:', error.message);
+          break;
+        }
+        if (!data || data.length === 0) break;
+        all = all.concat(data);
+        if (data.length < PAGE_SIZE) break; // no more rows left on the server
+        from += PAGE_SIZE;
+      }
+      if (cancelled) return;
+      const mapped = all.map((d) => ({
+        id: d.id,
+        company: d.company,
+        role: d.role,
+        level: d.level,
+        isIT: d.is_it,
+        city: d.city,
+        category: d.category,
+        experience: d.experience || 'See official listing',
+        salary: d.salary,
+        employmentType: d.employment_type || 'Full-time',
+        skills: d.skills || [],
+        description: d.description && d.description.length ? d.description : ['See the official listing for full details.'],
+        daysAgo: Math.max(0, Math.floor((Date.now() - new Date(d.posted_at).getTime()) / 86400000)),
+        link: d.link,
+      }));
+      const withCourses = mapped.map((j) => ({ ...j, courseCategory: classifyCourseCategory(j) }));
+      setJobs(withCourses);
+      setJobsLoading(false);
+    }
+
+    loadJobs();
+    return () => { cancelled = true; };
   }, []);
 
   const showToast = useCallback((msg) => {
@@ -903,6 +1183,7 @@ export default function App() {
       skills: skillsArr,
       savedJobIds: meta.saved_job_ids || [],
       alertsEnabled: !!meta.alerts_enabled,
+      phone: meta.phone || '',
     };
   }, [session]);
 
@@ -1027,8 +1308,44 @@ export default function App() {
     }
   };
 
+  const submitPhone = async (e) => {
+    e.preventDefault();
+    if (!currentUser) return;
+    const cleaned = phoneDraft.replace(/\D/g, '');
+    const normalized = cleaned.length === 12 && cleaned.startsWith('91') ? cleaned.slice(2) : cleaned;
+    if (normalized.length !== 10) {
+      setPhoneError('Enter a valid 10-digit mobile number.');
+      return;
+    }
+    setPhoneError('');
+    setPhoneBusy(true);
+    try {
+      await updateUserMetadata({ phone: normalized });
+      // Also store phone + email in the public `profiles` table so they're
+      // queryable directly from the database (see supabase/profiles.sql).
+      const { error: profileError } = await supabase.from('profiles').upsert({
+        id: currentUser.id,
+        email: currentUser.email,
+        phone: normalized,
+        updated_at: new Date().toISOString(),
+      });
+      if (profileError) {
+        // Metadata save already succeeded, so the user isn't blocked — but
+        // log this so it's visible the `profiles` table/policy needs setup.
+        console.error('profiles upsert failed:', profileError.message);
+      }
+      showToast('Thanks — your number has been saved.');
+    } catch (err) {
+      console.error('submitPhone failed:', err.message);
+      setPhoneError('Could not save your number — try again.');
+    } finally {
+      setPhoneBusy(false);
+    }
+  };
+
   const deleteAccount = async () => {
     if (!session) return;
+    setDeleteBusy(true);
     try {
       const res = await fetch('/api/delete-account', {
         method: 'POST',
@@ -1038,8 +1355,11 @@ export default function App() {
       if (!res.ok) {
         console.error('deleteAccount failed:', json.error || res.status, json.debug || '');
         showToast(json.error || 'Could not delete your account — try again.');
+        setDeleteBusy(false);
         return;
       }
+      setDeleteBusy(false);
+      setConfirmDeleteOpen(false);
       await supabase.auth.signOut();
       setPage('home');
       navigate('/');
@@ -1047,6 +1367,7 @@ export default function App() {
     } catch (err) {
       console.error('deleteAccount failed:', err);
       showToast('Could not reach the server — try again in a moment.');
+      setDeleteBusy(false);
     }
   };
 
@@ -1058,6 +1379,7 @@ export default function App() {
     return jobs.filter((job) => {
       if (filters.level !== 'all' && job.level !== filters.level && job.level !== 'both') return false;
       if (filters.level === 'experienced' && !expYearsInRange(job.experience, filters.expYears)) return false;
+      if (filters.level === 'fresher' && !matchesStudyYear(job, filters.studyYear)) return false;
       if (filters.course !== 'all' && job.courseCategory !== filters.course) return false;
       if (filters.domain === 'it' && !job.isIT) return false;
       if (filters.domain === 'nonit' && job.isIT) return false;
@@ -1163,6 +1485,7 @@ export default function App() {
                 filters={filters}
                 setLevel={setLevel}
                 setExpYears={setExpYears}
+                setStudyYear={setStudyYear}
                 setCourse={setCourse}
                 setDomain={setDomain}
                 setLoc={setLoc}
@@ -1289,13 +1612,14 @@ export default function App() {
               <dl className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
                 <div><dt className={`text-xs mb-0.5 ${dark ? 'text-slate-500' : 'text-slate-400'}`}>Name</dt><dd className={dark ? 'text-slate-200' : 'text-slate-800'}>{currentUser.name}</dd></div>
                 <div><dt className={`text-xs mb-0.5 ${dark ? 'text-slate-500' : 'text-slate-400'}`}>Email</dt><dd className={dark ? 'text-slate-200' : 'text-slate-800'}>{currentUser.email}</dd></div>
+                <div><dt className={`text-xs mb-0.5 ${dark ? 'text-slate-500' : 'text-slate-400'}`}>Mobile number</dt><dd className={dark ? 'text-slate-200' : 'text-slate-800'}>{currentUser.phone ? `+91 ${currentUser.phone}` : '—'}</dd></div>
               </dl>
             </div>
 
             <div className={card3D(dark, 'rounded-2xl p-5 mb-6')}>
               <h2 className={`font-semibold text-sm mb-1 ${dark ? 'text-slate-200' : 'text-slate-800'}`}>Skills & interests</h2>
               <p className={`text-xs mb-3 ${dark ? 'text-slate-500' : 'text-slate-400'}`}>Add each skill one at a time — we use these to sort "Matched for you" on Home. Changes save automatically.</p>
-              <SkillsInput skills={currentUser.skills} onChange={updateSkills} dark={dark} />
+              <SkillsInput skills={currentUser.skills} onChange={updateSkills} dark={dark} currentUser={currentUser} />
             </div>
 
             <div className={card3D(dark, 'rounded-2xl p-5 mb-6')}>
@@ -1304,15 +1628,7 @@ export default function App() {
                   <h2 className={`font-semibold text-sm mb-1 ${dark ? 'text-slate-200' : 'text-slate-800'}`}>Email job alerts</h2>
                   <p className={`text-xs ${dark ? 'text-slate-500' : 'text-slate-400'}`}>Get a daily email when new roles matching your skills go live. Uses the skills list above.</p>
                 </div>
-                <button
-                  type="button"
-                  role="switch"
-                  aria-checked={currentUser.alertsEnabled}
-                  onClick={() => updateAlerts(!currentUser.alertsEnabled)}
-                  className={`shrink-0 h-7 w-12 rounded-full relative transition-colors duration-200 ${currentUser.alertsEnabled ? 'bg-emerald-600' : (dark ? 'bg-slate-700' : 'bg-slate-300')}`}
-                >
-                  <span className={`absolute top-0.5 h-6 w-6 rounded-full bg-white shadow transition-transform duration-200 ${currentUser.alertsEnabled ? 'translate-x-5' : 'translate-x-0.5'}`} />
-                </button>
+                <Toggle checked={currentUser.alertsEnabled} onChange={updateAlerts} dark={dark} label="Email job alerts" />
               </div>
               {currentUser.alertsEnabled && currentUser.skills.length === 0 && (
                 <p className={`text-xs mt-3 ${dark ? 'text-amber-400' : 'text-amber-700'}`}>Add at least one skill above so we know what to match you against.</p>
@@ -1322,7 +1638,7 @@ export default function App() {
             <div className={`border rounded-2xl p-5 shadow-[0_10px_24px_-14px_rgba(153,27,27,0.3)] ${dark ? 'border-red-900/50 bg-red-500/5' : 'border-red-200 bg-red-50'}`}>
               <h2 className={`font-semibold text-sm mb-1 ${dark ? 'text-red-400' : 'text-red-700'}`}>Delete account</h2>
               <p className={`text-xs mb-3 ${dark ? 'text-slate-400' : 'text-slate-500'}`}>Permanently deletes your login, saved roles and preferences. This cannot be undone.</p>
-              <button onClick={() => { if (window.confirm("Delete your account and all data? This can't be undone.")) deleteAccount(); }} className={`h-9 px-4 rounded-lg border text-sm transition-all duration-150 hover:-translate-y-0.5 active:translate-y-0 active:scale-95 ${dark ? 'border-red-800 text-red-400 hover:bg-red-500/10' : 'border-red-300 text-red-700 hover:bg-red-100'}`}>Delete my account & data</button>
+              <button onClick={() => setConfirmDeleteOpen(true)} className={`h-9 px-4 rounded-lg border text-sm transition-all duration-150 hover:-translate-y-0.5 active:translate-y-0 active:scale-95 ${dark ? 'border-red-800 text-red-400 hover:bg-red-500/10' : 'border-red-300 text-red-700 hover:bg-red-100'}`}>Delete my account & data</button>
             </div>
           </section>
         )}
@@ -1365,7 +1681,27 @@ export default function App() {
         dark={dark}
       />
       {showTC && <TCModal onClose={() => setShowTC(false)} dark={dark} />}
+      <ConfirmModal
+        open={confirmDeleteOpen}
+        title="Delete your account?"
+        body="This permanently deletes your login, saved roles and preferences. This can't be undone."
+        confirmLabel="Delete my account"
+        busy={deleteBusy}
+        onConfirm={deleteAccount}
+        onCancel={() => { if (!deleteBusy) setConfirmDeleteOpen(false); }}
+        dark={dark}
+      />
       <Toast message={toast} />
+      <PhoneGateModal
+        open={!!currentUser && !currentUser.phone}
+        name={currentUser ? currentUser.name : ''}
+        phoneDraft={phoneDraft}
+        setPhoneDraft={setPhoneDraft}
+        phoneError={phoneError}
+        phoneBusy={phoneBusy}
+        onSubmit={submitPhone}
+        dark={dark}
+      />
     </div>
   );
 }
