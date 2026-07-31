@@ -123,9 +123,9 @@ function NavBtn({ active, onClick, children, dark }) {
 
 function StatTile({ value, label, dark }) {
   return (
-    <div className={card3D(dark, 'rounded-xl px-4 py-3 min-w-[110px]')}>
-      <div className={`font-display text-2xl sm:text-3xl font-extrabold leading-none ${dark ? 'text-emerald-400' : 'text-emerald-700'}`}>{value}</div>
-      <div className="text-[11px] uppercase tracking-wide text-slate-500 mt-1">{label}</div>
+    <div className={card3D(dark, 'rounded-xl px-3 py-3 sm:px-4 min-w-0')}>
+      <div className={`font-display text-xl sm:text-2xl md:text-3xl font-extrabold leading-none ${dark ? 'text-emerald-400' : 'text-emerald-700'}`}>{value}</div>
+      <div className="text-[10px] sm:text-[11px] uppercase tracking-wide text-slate-500 mt-1">{label}</div>
     </div>
   );
 }
@@ -1133,13 +1133,15 @@ export default function App() {
                 <button onClick={() => { setAuthError(''); setAuthModalOpen(true); }} className={`text-sm h-9 px-3 rounded-lg bg-emerald-600 text-white font-semibold hover:bg-emerald-700 ${btn3D(dark)}`}>Sign up free</button>
               </>
             )}
-            <button className={`md:hidden h-9 w-9 flex items-center justify-center rounded-lg border transition-all duration-150 active:scale-90 ${dark ? 'border-slate-700 text-slate-300' : 'border-slate-200 text-slate-600'}`} onClick={() => setMobileNav((v) => !v)} aria-label="Menu"><Menu size={16} /></button>
+            {currentUser && (
+              <button className={`md:hidden h-9 w-9 flex items-center justify-center rounded-lg border transition-all duration-150 active:scale-90 ${dark ? 'border-slate-700 text-slate-300' : 'border-slate-200 text-slate-600'}`} onClick={() => setMobileNav((v) => !v)} aria-label="Menu"><Menu size={16} /></button>
+            )}
           </div>
         </div>
-        {mobileNav && (
+        {mobileNav && currentUser && (
           <div className={`md:hidden border-t px-4 py-3 flex flex-col gap-1 ${dark ? 'border-slate-800' : 'border-slate-200'}`}>
-            {currentUser && <NavBtn active={page === 'saved'} onClick={() => { setPage('saved'); setMobileNav(false); }} dark={dark}>Saved ({currentUser.savedJobIds.length})</NavBtn>}
-            {currentUser && <NavBtn active={page === 'profile'} onClick={() => { setPage('profile'); setMobileNav(false); }} dark={dark}>Profile</NavBtn>}
+            <NavBtn active={page === 'saved'} onClick={() => { setPage('saved'); setMobileNav(false); }} dark={dark}>Saved ({currentUser.savedJobIds.length})</NavBtn>
+            <NavBtn active={page === 'profile'} onClick={() => { setPage('profile'); setMobileNav(false); }} dark={dark}>Profile</NavBtn>
           </div>
         )}
       </div>
@@ -1179,7 +1181,7 @@ export default function App() {
                     <div className="text-xs font-semibold text-emerald-600 uppercase tracking-widest mb-2">Fresher & experienced roles · Across India</div>
                     <h1 className={`font-display text-3xl sm:text-4xl font-extrabold leading-tight max-w-xl ${dark ? 'text-slate-50' : 'text-slate-900'}`}>New roles land here first. Yours could be next.</h1>
                     <p className={`mt-2 max-w-lg text-sm sm:text-base ${dark ? 'text-slate-400' : 'text-slate-600'}`}>Freshers to veterans, IT to everything else — set your filters on the left, then jump straight to the company's own site and apply. Always free.</p>
-                    <div className="flex gap-3 overflow-x-auto pb-1 mt-5">
+                    <div className="grid grid-cols-3 gap-2 sm:gap-3 mt-5">
                       <StatTile value={jobs.length} label="Live roles" dark={dark} />
                       <StatTile value={jobs.filter((j) => j.daysAgo === 0).length} label="New today" dark={dark} />
                       <StatTile value={COMPANIES.length} label="Employers" dark={dark} />
