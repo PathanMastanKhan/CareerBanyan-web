@@ -3,7 +3,11 @@
     { "source": "/sitemap.xml", "destination": "/api/sitemap" },
     { "source": "/((?!api/|assets/|.*\\..*).*)", "destination": "/index.html" }
   ],
+  "functions": {
+    "api/sync-jobs.js": { "maxDuration": 60 }
+  },
   "crons": [
-    { "path": "/api/send-job-alerts", "schedule": "0 3 * * *" }
+    { "path": "/api/send-job-alerts", "schedule": "0 3 * * *" },
+    { "path": "/api/sync-jobs", "schedule": "30 2 * * *" }
   ]
 }
