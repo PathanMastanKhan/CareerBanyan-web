@@ -276,7 +276,7 @@ export function TCModal({ onClose, dark }) {
           <p><strong className={strong}>No fee, ever.</strong> This board never charges job seekers to browse, save, or apply to a listing. Treat any recruiter who asks you for money as fraudulent.</p>
           <p><strong className={strong}>Where "Apply" goes.</strong> Every listing links out to the employer's own official careers page. Applications, interviews and offers happen on that employer's site — we don't collect or see your application.</p>
           <p><strong className={strong}>Missing salary.</strong> Some employers don't disclose pay upfront. We show those roles anyway, labelled "Not disclosed," instead of hiding them.</p>
-          <p><strong className={strong}>Your control.</strong> You can update your saved skills any time from Profile. To delete your account and stored data, use the request on the Profile page — we process deletion requests manually and will confirm by email.</p>
+          <p><strong className={strong}>Your control.</strong> You can update your saved skills any time from Profile. To delete your account and stored data, use the "Delete my account & data" button on the Profile page — this deletes your account immediately and cannot be undone.</p>
           <p><strong className={strong}>Job data.</strong> Listings are pulled from public job-search data sources and refreshed daily. We link to each employer's own site for the actual application — we don't run the hiring process ourselves.</p>
         </div>
       </div>
@@ -342,4 +342,3 @@ export function JobNotFoundModal({ onClose, dark }) {
     </div>
   );
 }
-
