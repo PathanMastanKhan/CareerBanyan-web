@@ -111,7 +111,7 @@ export default function App() {
     // MAX_JOBS or the server has no more rows to give us.
     async function loadJobs() {
       const PAGE_SIZE = 500;
-      const MAX_JOBS = 1000; // safety cap — current sync buckets produce well under this
+      const MAX_JOBS = 5000; // safety cap only — well above anything the current or planned sync buckets will produce
       let all = [];
       let from = 0;
       while (all.length < MAX_JOBS) {
