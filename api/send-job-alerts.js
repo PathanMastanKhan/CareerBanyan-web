@@ -1,5 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
-function matchScore(job, tokens) {
+function matchScore(job, tokens, experienceLevel = '') {
   let score = 0;
   const role = (job.role || '').toLowerCase();
   const category = (job.category || '').toLowerCase();
@@ -17,6 +17,17 @@ function matchScore(job, tokens) {
       if (hits > 0) score += hits;
     }
   });
+  // Same nudge-not-filter logic as the site's "Matched for you" ranking —
+  // see matchScore in src/App.jsx.
+  if (experienceLevel === 'fresher') {
+    if (job.level === 'fresher') score += 2;
+    else if (job.level === 'both') score += 1;
+    else if (job.level === 'experienced') score -= 2;
+  } else if (experienceLevel === 'experienced') {
+    if (job.level === 'experienced') score += 2;
+    else if (job.level === 'both') score += 1;
+    else if (job.level === 'fresher') score -= 2;
+  }
   return score;
 }
 
@@ -89,7 +100,7 @@ export default async function handler(req, res) {
     const meta = user.user_metadata || {};
     const tokens = meta.skills.map((s) => s.toLowerCase().trim()).filter(Boolean);
     const matched = newJobs
-      .map((job) => ({ job, score: matchScore(job, tokens) }))
+      .map((job) => ({ job, score: matchScore(job, tokens, meta.experience_level || '') }))
       .filter((x) => x.score > 0)
       .sort((a, b) => b.score - a.score)
       .slice(0, 5)
