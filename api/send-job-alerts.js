@@ -4,10 +4,18 @@ function matchScore(job, tokens) {
   const role = (job.role || '').toLowerCase();
   const category = (job.category || '').toLowerCase();
   const skillsLower = (job.skills || []).map((s) => s.toLowerCase());
+  const descText = Array.isArray(job.description) ? job.description.join(' ').toLowerCase() : String(job.description || '').toLowerCase();
   tokens.forEach((t) => {
-    if (skillsLower.some((s) => s.includes(t) || t.includes(s))) score += 2;
+    if (skillsLower.some((s) => s.includes(t) || t.includes(s))) score += 3;
     if (role.includes(t)) score += 3;
+    if (descText.includes(t)) score += 2;
     if (category.includes(t)) score += 1;
+    if (t.includes(' ')) {
+      const hay = `${role} ${descText} ${category}`;
+      const words = t.split(' ').filter((w) => w.length > 3);
+      const hits = words.filter((w) => hay.includes(w)).length;
+      if (hits > 0) score += hits;
+    }
   });
   return score;
 }
