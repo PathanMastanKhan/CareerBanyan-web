@@ -18,12 +18,51 @@ function matchScore(job, tokens) {
   const role = job.role.toLowerCase();
   const category = (job.category || '').toLowerCase();
   const skillsLower = (job.skills || []).map((s) => s.toLowerCase());
+  const descText = (job.description || []).join(' ').toLowerCase();
   tokens.forEach((t) => {
-    if (skillsLower.some((s) => s.includes(t) || t.includes(s))) score += 2;
+    if (skillsLower.some((s) => s.includes(t) || t.includes(s))) score += 3;
     if (role.includes(t)) score += 3;
+    if (descText.includes(t)) score += 2;
     if (category.includes(t)) score += 1;
+    // Multi-word skills (e.g. "machine learning") rarely appear verbatim in
+    // a short job title, so also give partial credit for each individual
+    // word of 4+ letters — weighted lower so it nudges ranking rather than
+    // dominating it.
+    if (t.includes(' ')) {
+      const hay = `${role} ${descText} ${category}`;
+      const words = t.split(' ').filter((w) => w.length > 3);
+      const hits = words.filter((w) => hay.includes(w)).length;
+      if (hits > 0) score += hits;
+    }
   });
   return score;
+}
+
+// Fallback used when a person's skills score few or no direct job matches
+// (e.g. their skills are real but just don't appear verbatim in any live
+// posting right now). Infers which course-category their skill set points
+// to, so "Matched for you" can still surface relevant roles instead of
+// staying empty.
+const SKILL_CATEGORY_HINTS = {
+  engineering: ['java', 'python', 'c++', 'c#', 'javascript', 'typescript', 'html', 'css', 'react', 'node', 'angular', 'vue', 'autocad', 'solidworks', 'embedded', 'vlsi', 'plc', 'networking', 'cybersecurity', 'android', 'ios', 'flutter', 'php', 'ruby', 'golang', 'rust', '.net', 'django', 'flask', 'devops', 'aws', 'azure', 'docker', 'kubernetes', 'git', 'machine learning', 'data structures', 'algorithms'],
+  computer_apps: ['software testing', 'manual testing', 'automation testing', 'it support', 'network administration', 'dbms', 'sql'],
+  science: ['biology', 'microbiology', 'chemistry', 'physics', 'biotechnology', 'bioinformatics', 'lab techniques', 'data science', 'data analysis', 'r programming', 'statistics'],
+  pharmacy: ['pharmacology', 'pharmacovigilance', 'clinical research', 'drug safety', 'gmp', 'quality control'],
+  commerce: ['accounting', 'tally', 'gst', 'taxation', 'auditing', 'bookkeeping', 'financial analysis', 'sap fico'],
+  management: ['marketing', 'digital marketing', 'seo', 'sales', 'business development', 'hr', 'recruitment', 'project management', 'crm'],
+  law: ['legal drafting', 'contract law', 'litigation', 'compliance', 'paralegal'],
+  arts: ['content writing', 'copywriting', 'journalism', 'graphic design', 'video editing', 'teaching', 'translation'],
+};
+
+function inferCategoryFromSkills(tokens) {
+  const hay = tokens.join(' ');
+  let best = null;
+  let bestCount = 0;
+  for (const [cat, keys] of Object.entries(SKILL_CATEGORY_HINTS)) {
+    const count = keys.filter((k) => hay.includes(k)).length;
+    if (count > bestCount) { bestCount = count; best = cat; }
+  }
+  return best;
 }
 
 const COURSE_CATEGORIES = [
@@ -1400,7 +1439,23 @@ export default function App() {
     if (!tokens.length) return [];
     const scored = jobs.map((job) => ({ job, score: matchScore(job, tokens) })).filter((x) => x.score > 0);
     scored.sort((a, b) => b.score - a.score || a.job.daysAgo - b.job.daysAgo);
-    return scored.slice(0, 6).map((x) => x.job);
+    let picks = scored.slice(0, 6).map((x) => x.job);
+    // If direct skill matches are thin (skills are real but just don't show
+    // up verbatim in any live posting right now), fill remaining slots with
+    // recent jobs from the course category their skills point to, so this
+    // section isn't empty just because of exact-text mismatches.
+    if (picks.length < 6) {
+      const category = inferCategoryFromSkills(tokens);
+      if (category) {
+        const already = new Set(picks.map((j) => j.id));
+        const extra = jobs
+          .filter((j) => !already.has(j.id) && j.courseCategory === category)
+          .sort((a, b) => a.daysAgo - b.daysAgo)
+          .slice(0, 6 - picks.length);
+        picks = picks.concat(extra);
+      }
+    }
+    return picks;
   }, [currentUser, jobs]);
 
   const openJob = openJobId ? jobs.find((j) => String(j.id) === String(openJobId)) : null;
