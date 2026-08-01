@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Search, MapPin, Bookmark, LogOut, X, Menu, ExternalLink, Sparkles, ShieldCheck, Leaf, Sun, Moon, ChevronLeft, ChevronRight, Plus, Code2, Cpu, Wrench, Building2, FlaskConical, Briefcase, BadgeCheck, Bell } from 'lucide-react';
+import { track } from '@vercel/analytics';
 import { supabase } from './supabaseClient';
 
 export const SITE_URL = 'https://careerbanyan.vercel.app';
@@ -395,13 +396,51 @@ function JobOrbit({ dark }) {
   );
 }
 
+// Adzuna never gives us a company website, so this is a best-effort guess:
+// strip common legal suffixes (Pvt Ltd, Technologies, etc.) and punctuation,
+// then try that as a .com domain against Clearbit's free logo API. This
+// works well for recognizable brand names (Amazon, Infosys, Flipkart...)
+// and silently fails over to the initials avatar for anything obscure or
+// wrong — there's no way to know in advance which it'll be.
+function guessCompanyDomain(company) {
+  if (!company || company === 'Unknown employer') return null;
+  const cleaned = company
+    .toLowerCase()
+    .replace(/\b(pvt\.?|private|ltd\.?|limited|llp|inc\.?|corp\.?|corporation|co\.?|company|india|technologies|technology|solutions|services|group|consulting)\b/g, '')
+    .replace(/[^a-z0-9]/g, '')
+    .trim();
+  if (!cleaned || cleaned.length < 3) return null;
+  return `${cleaned}.com`;
+}
+
+function CompanyLogo({ company, dark }) {
+  const domain = useMemo(() => guessCompanyDomain(company), [company]);
+  const [failed, setFailed] = useState(false);
+
+  if (!domain || failed) {
+    return (
+      <div className={`h-11 w-11 shrink-0 rounded-xl text-white flex items-center justify-center text-[11px] font-bold font-display shadow-[inset_0_1px_0_rgba(255,255,255,0.25),0_3px_6px_rgba(0,0,0,0.25)] ${dark ? 'bg-slate-700' : 'bg-slate-900'}`}>
+        {initials(company)}
+      </div>
+    );
+  }
+  return (
+    <img
+      src={`https://logo.clearbit.com/${domain}?size=88`}
+      alt=""
+      onError={() => setFailed(true)}
+      className={`h-11 w-11 shrink-0 rounded-xl object-contain bg-white border p-1 ${dark ? 'border-slate-700' : 'border-slate-200'}`}
+    />
+  );
+}
+
 const JobCard = React.memo(function JobCard({ job, saved, onToggleSave, onOpen, currentUser, onRequestAuth, highlight, dark }) {
   const tilt = useTilt();
 
   return (
     <div
       ref={tilt.ref}
-      onClick={() => onOpen(job.id)}
+      onClick={() => { track('job_card_open', { category: job.category, isIT: job.isIT }); onOpen(job.id); }}
       onMouseMove={tilt.onMouseMove}
       onMouseLeave={tilt.onMouseLeave}
       style={tilt.tiltStyle}
@@ -409,7 +448,7 @@ const JobCard = React.memo(function JobCard({ job, saved, onToggleSave, onOpen, 
     >
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-center gap-3 min-w-0">
-          <div className={`h-11 w-11 shrink-0 rounded-xl text-white flex items-center justify-center text-[11px] font-bold font-display shadow-[inset_0_1px_0_rgba(255,255,255,0.25),0_3px_6px_rgba(0,0,0,0.25)] ${dark ? 'bg-slate-700' : 'bg-slate-900'}`}>{initials(job.company)}</div>
+          <CompanyLogo company={job.company} dark={dark} />
           <div className="min-w-0">
             <div className={`text-xs truncate ${dark ? 'text-slate-400' : 'text-slate-500'}`}>{job.company}</div>
             <h3 className={`font-display font-bold leading-snug line-clamp-2 ${dark ? 'text-slate-50' : 'text-slate-900'}`}>{job.role}</h3>
@@ -446,7 +485,7 @@ const JobCard = React.memo(function JobCard({ job, saved, onToggleSave, onOpen, 
       <div className={`pt-2 mt-auto border-t flex items-center justify-between ${dark ? 'border-slate-800' : 'border-slate-100'}`}>
         <span className={`text-xs ${dark ? 'text-slate-500' : 'text-slate-400'}`}>Tap for full description</span>
         {currentUser ? (
-          <a href={job.link} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()} className={`text-sm font-semibold flex items-center gap-1 ${dark ? 'text-emerald-400 hover:text-emerald-300' : 'text-emerald-700 hover:text-emerald-800'}`}>
+          <a href={job.link} target="_blank" rel="noopener noreferrer" onClick={(e) => { e.stopPropagation(); track('job_apply_click', { category: job.category, isIT: job.isIT }); }} className={`text-sm font-semibold flex items-center gap-1 ${dark ? 'text-emerald-400 hover:text-emerald-300' : 'text-emerald-700 hover:text-emerald-800'}`}>
             Apply <ExternalLink size={13} />
           </a>
         ) : (
@@ -1114,12 +1153,12 @@ export default function App() {
     setFilters(DEFAULT_FILTERS);
     setSearchInput('');
   };
-  const setLevel = (val) => setFilters((f) => ({ ...f, level: val, expYears: 'all', studyYear: 'all' }));
+  const setLevel = (val) => { track('filter_level', { value: val }); setFilters((f) => ({ ...f, level: val, expYears: 'all', studyYear: 'all' })); };
   const setExpYears = (val) => setFilters((f) => ({ ...f, expYears: val }));
   const setStudyYear = (val) => setFilters((f) => ({ ...f, studyYear: val }));
-  const setCourse = (val) => setFilters((f) => ({ ...f, course: val }));
-  const setDomain = (val) => setFilters((f) => ({ ...f, domain: val }));
-  const setLoc = (val) => setFilters((f) => ({ ...f, loc: val }));
+  const setCourse = (val) => { track('filter_course', { value: val }); setFilters((f) => ({ ...f, course: val })); };
+  const setDomain = (val) => { track('filter_domain', { value: val }); setFilters((f) => ({ ...f, domain: val })); };
+  const setLoc = (val) => { track('filter_location', { value: val }); setFilters((f) => ({ ...f, loc: val })); };
 
   const toastTimer = useRef(null);
 
