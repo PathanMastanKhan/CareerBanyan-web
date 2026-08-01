@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, useRef, Suspense, lazy } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { LogOut, X, Menu, Sparkles, Leaf, Sun, Moon } from 'lucide-react';
 import { track } from '@vercel/analytics';
@@ -13,11 +13,18 @@ import { card3D, btn3D, pillCls } from './lib/styles';
 
 import { NavBtn, StatTile, Toggle, Toast } from './components/atoms';
 import { JobOrbit, JobCard, Carousel } from './components/JobCard';
-import {
-  JobDetailModal, AuthModal, PhoneGateModal, TCModal, ConfirmModal, JobNotFoundModal,
-} from './components/Modals';
 import { SkillsInput } from './components/SkillsInput';
 import { FilterPanel } from './components/FilterPanel';
+
+// Most visitors land on Home and never open a modal on their first click —
+// splitting these into their own chunk keeps them out of the JS everyone
+// has to download and parse just to see the job list.
+const JobDetailModal = lazy(() => import('./components/Modals').then((m) => ({ default: m.JobDetailModal })));
+const AuthModal = lazy(() => import('./components/Modals').then((m) => ({ default: m.AuthModal })));
+const PhoneGateModal = lazy(() => import('./components/Modals').then((m) => ({ default: m.PhoneGateModal })));
+const TCModal = lazy(() => import('./components/Modals').then((m) => ({ default: m.TCModal })));
+const ConfirmModal = lazy(() => import('./components/Modals').then((m) => ({ default: m.ConfirmModal })));
+const JobNotFoundModal = lazy(() => import('./components/Modals').then((m) => ({ default: m.JobNotFoundModal })));
 
 export default function App() {
   const navigate = useNavigate();
@@ -104,7 +111,7 @@ export default function App() {
     // MAX_JOBS or the server has no more rows to give us.
     async function loadJobs() {
       const PAGE_SIZE = 500;
-      const MAX_JOBS = 3000;
+      const MAX_JOBS = 1000; // safety cap — current sync buckets produce well under this
       let all = [];
       let from = 0;
       while (all.length < MAX_JOBS) {
@@ -704,52 +711,54 @@ export default function App() {
         </div>
       </footer>
 
-      {openJobId && !jobsLoading && !openJob ? (
-        <JobNotFoundModal onClose={() => navigate('/')} dark={dark} />
-      ) : (
-        <JobDetailModal
-          job={openJob}
-          saved={!!currentUser && !!openJob && currentUser.savedJobIds.includes(openJob.id)}
-          onToggleSave={() => openJob && toggleSave(openJob.id)}
-          onClose={() => navigate('/')}
-          currentUser={currentUser}
-          onRequestAuth={requestAuth}
+      <Suspense fallback={null}>
+        {openJobId && !jobsLoading && !openJob ? (
+          <JobNotFoundModal onClose={() => navigate('/')} dark={dark} />
+        ) : (
+          <JobDetailModal
+            job={openJob}
+            saved={!!currentUser && !!openJob && currentUser.savedJobIds.includes(openJob.id)}
+            onToggleSave={() => openJob && toggleSave(openJob.id)}
+            onClose={() => navigate('/')}
+            currentUser={currentUser}
+            onRequestAuth={requestAuth}
+            dark={dark}
+          />
+        )}
+
+        <AuthModal
+          open={authModalOpen}
+          onClose={() => { setAuthModalOpen(false); setAuthError(''); }}
+          onSendOtp={sendEmailOtp}
+          onVerifyOtp={handleVerifyOtp}
+          onGoogle={signInWithGoogle}
+          error={authError}
+          onOpenTC={() => setShowTC(true)}
           dark={dark}
         />
-      )}
-
-      <AuthModal
-        open={authModalOpen}
-        onClose={() => { setAuthModalOpen(false); setAuthError(''); }}
-        onSendOtp={sendEmailOtp}
-        onVerifyOtp={handleVerifyOtp}
-        onGoogle={signInWithGoogle}
-        error={authError}
-        onOpenTC={() => setShowTC(true)}
-        dark={dark}
-      />
-      {showTC && <TCModal onClose={() => setShowTC(false)} dark={dark} />}
-      <ConfirmModal
-        open={confirmDeleteOpen}
-        title="Delete your account?"
-        body="This permanently deletes your login, saved roles and preferences. This can't be undone."
-        confirmLabel="Delete my account"
-        busy={deleteBusy}
-        onConfirm={deleteAccount}
-        onCancel={() => { if (!deleteBusy) setConfirmDeleteOpen(false); }}
-        dark={dark}
-      />
+        {showTC && <TCModal onClose={() => setShowTC(false)} dark={dark} />}
+        <ConfirmModal
+          open={confirmDeleteOpen}
+          title="Delete your account?"
+          body="This permanently deletes your login, saved roles and preferences. This can't be undone."
+          confirmLabel="Delete my account"
+          busy={deleteBusy}
+          onConfirm={deleteAccount}
+          onCancel={() => { if (!deleteBusy) setConfirmDeleteOpen(false); }}
+          dark={dark}
+        />
+        <PhoneGateModal
+          open={!!currentUser && !currentUser.phone}
+          name={currentUser ? currentUser.name : ''}
+          phoneDraft={phoneDraft}
+          setPhoneDraft={setPhoneDraft}
+          phoneError={phoneError}
+          phoneBusy={phoneBusy}
+          onSubmit={submitPhone}
+          dark={dark}
+        />
+      </Suspense>
       <Toast message={toast} />
-      <PhoneGateModal
-        open={!!currentUser && !currentUser.phone}
-        name={currentUser ? currentUser.name : ''}
-        phoneDraft={phoneDraft}
-        setPhoneDraft={setPhoneDraft}
-        phoneError={phoneError}
-        phoneBusy={phoneBusy}
-        onSubmit={submitPhone}
-        dark={dark}
-      />
     </div>
   );
 }
