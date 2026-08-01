@@ -1,6 +1,17 @@
 {
   "rewrites": [
     { "source": "/sitemap.xml", "destination": "/api/sitemap" },
+    {
+      "source": "/job/:id",
+      "has": [
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": ".*(facebookexternalhit|Facebot|WhatsApp|LinkedInBot|Twitterbot|Slackbot|TelegramBot|Discordbot|Googlebot|Google-InspectionTool|bingbot|Applebot|SkypeUriPreview|redditbot|Pinterest).*"
+        }
+      ],
+      "destination": "/api/job-page?id=:id"
+    },
     { "source": "/((?!api/|assets/|.*\\..*).*)", "destination": "/index.html" }
   ],
   "functions": {
