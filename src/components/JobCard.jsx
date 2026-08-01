@@ -85,6 +85,7 @@ export function CompanyLogo({ company, dark }) {
   return (
     <img
       src={`https://logo.clearbit.com/${domain}?size=88`}
+      loading="lazy"
       alt=""
       onError={() => setFailed(true)}
       className={`h-11 w-11 shrink-0 rounded-xl object-contain bg-white border p-1 ${dark ? 'border-slate-700' : 'border-slate-200'}`}
