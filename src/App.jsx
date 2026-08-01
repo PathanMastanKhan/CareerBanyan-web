@@ -49,10 +49,13 @@ const SKILL_CATEGORY_HINTS = {
   computer_apps: ['software testing', 'manual testing', 'automation testing', 'it support', 'network administration', 'dbms', 'sql'],
   science: ['biology', 'microbiology', 'chemistry', 'physics', 'biotechnology', 'bioinformatics', 'lab techniques', 'data science', 'data analysis', 'r programming', 'statistics'],
   pharmacy: ['pharmacology', 'pharmacovigilance', 'clinical research', 'drug safety', 'gmp', 'quality control'],
+  healthcare: ['nursing', 'patient care', 'clinical', 'physiotherapy', 'first aid', 'medical'],
+  teaching: ['teaching', 'lesson planning', 'classroom management', 'curriculum', 'mentoring'],
+  hospitality: ['hospitality', 'front office', 'housekeeping', 'food and beverage', 'guest relations'],
   commerce: ['accounting', 'tally', 'gst', 'taxation', 'auditing', 'bookkeeping', 'financial analysis', 'sap fico'],
-  management: ['marketing', 'digital marketing', 'seo', 'sales', 'business development', 'hr', 'recruitment', 'project management', 'crm'],
+  management: ['marketing', 'digital marketing', 'seo', 'sales', 'business development', 'hr', 'recruitment', 'project management', 'crm', 'retail'],
   law: ['legal drafting', 'contract law', 'litigation', 'compliance', 'paralegal'],
-  arts: ['content writing', 'copywriting', 'journalism', 'graphic design', 'video editing', 'teaching', 'translation'],
+  arts: ['content writing', 'copywriting', 'journalism', 'graphic design', 'video editing', 'translation'],
 };
 
 function inferCategoryFromSkills(tokens) {
@@ -71,10 +74,13 @@ const COURSE_CATEGORIES = [
   { key: 'computer_apps', label: 'BCA / MCA (Computer Applications)', keywords: ['bca', 'mca', 'software tester', 'qa engineer', 'it support', 'network admin'] },
   { key: 'science', label: 'B.Sc / M.Sc (Science)', keywords: ['b.sc', 'bsc', 'm.sc', 'msc', 'lab technician', 'chemist', 'biology', 'microbiology', 'research assistant', 'data scientist', 'data analyst'] },
   { key: 'pharmacy', label: 'B.Pharmacy / Pharmacy', keywords: ['pharmacist', 'pharmacy', 'pharma', 'pharmaceutical', 'drug safety', 'medical representative'] },
+  { key: 'healthcare', label: 'B.Sc Nursing / BAMS / BHMS (Healthcare)', keywords: ['nurse', 'nursing', 'medical officer', 'physiotherapist', 'healthcare', 'hospital staff', 'clinical', 'paramedic'] },
+  { key: 'teaching', label: 'B.Ed (Teaching & Education)', keywords: ['teacher', 'teaching', 'faculty', 'trainer', 'tutor', 'lecturer', 'b.ed'] },
+  { key: 'hospitality', label: 'BHM (Hospitality & Travel)', keywords: ['hotel', 'front office', 'chef', 'kitchen', 'hospitality', 'travel desk', 'housekeeping'] },
   { key: 'commerce', label: 'B.Com / M.Com (Commerce)', keywords: ['accountant', 'accounting', 'b.com', 'bcom', 'taxation', 'audit', 'bookkeeping', 'finance executive', 'gst'] },
-  { key: 'management', label: 'BBA / MBA (Management)', keywords: ['mba', 'bba', 'management trainee', 'business analyst', 'marketing executive', 'sales executive', 'hr executive', 'operations manager', 'business development'] },
+  { key: 'management', label: 'BBA / MBA (Management)', keywords: ['mba', 'bba', 'management trainee', 'business analyst', 'marketing executive', 'sales executive', 'hr executive', 'operations manager', 'business development', 'retail', 'store manager'] },
   { key: 'law', label: 'LLB / Law', keywords: ['lawyer', 'legal', 'llb', 'advocate', 'paralegal', 'compliance officer', 'legal counsel'] },
-  { key: 'arts', label: 'BA / MA (Arts & Humanities)', keywords: ['content writer', 'journalist', 'ba ', 'humanities', 'social work', 'teacher', 'copywriter', 'translator'] },
+  { key: 'arts', label: 'BA / MA (Arts & Humanities)', keywords: ['content writer', 'journalist', 'ba ', 'humanities', 'social work', 'copywriter', 'translator'] },
 ];
 
 function classifyCourseCategory(job) {
