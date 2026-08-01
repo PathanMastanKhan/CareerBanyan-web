@@ -44,6 +44,13 @@ export default function App() {
   const [phoneBusy, setPhoneBusy] = useState(false);
 
   const [filters, setFilters] = useState(DEFAULT_FILTERS);
+  // How many cards to actually render in the "All roles" grid at once.
+  // Rendering all ~600+ jobs as full cards (each with a logo image and a
+  // hover-tilt listener) at the same time was the main cause of both slow
+  // first paint and laggy scrolling — this caps the initial DOM/image work
+  // and reveals more only when asked.
+  const PAGE_SIZE = 24;
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   const [searchInput, setSearchInput] = useState('');
 
   useEffect(() => {
@@ -371,6 +378,8 @@ export default function App() {
   const LOCATIONS = useMemo(() => Array.from(new Set(jobs.map((j) => j.city))).sort(), [jobs]);
   const COMPANIES = useMemo(() => Array.from(new Set(jobs.map((j) => j.company))), [jobs]);
 
+  useEffect(() => { setVisibleCount(PAGE_SIZE); }, [filters]);
+
   const filteredJobs = useMemo(() => {
     const q = filters.q.trim().toLowerCase();
     return jobs.filter((job) => {
@@ -570,9 +579,21 @@ export default function App() {
                         <button onClick={clearFilters} className={`mt-4 h-9 px-4 rounded-lg border text-sm transition-all duration-150 hover:-translate-y-0.5 active:translate-y-0 active:scale-95 ${dark ? 'border-slate-700 text-slate-300 hover:border-slate-600' : 'border-slate-200 text-slate-600 hover:border-slate-300'}`}>Clear filters</button>
                       </div>
                     ) : (
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {filteredJobs.map((job) => <JobCard key={job.id} {...jobCardProps(job, false)} />)}
-                      </div>
+                      <>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          {filteredJobs.slice(0, visibleCount).map((job) => <JobCard key={job.id} {...jobCardProps(job, false)} />)}
+                        </div>
+                        {visibleCount < filteredJobs.length && (
+                          <div className="flex justify-center mt-6">
+                            <button
+                              onClick={() => setVisibleCount((c) => c + PAGE_SIZE)}
+                              className={`h-10 px-5 rounded-lg border text-sm font-medium transition-all duration-150 hover:-translate-y-0.5 active:translate-y-0 active:scale-95 ${dark ? 'border-slate-700 text-slate-300 hover:border-slate-600' : 'border-slate-200 text-slate-600 hover:border-slate-300'}`}
+                            >
+                              Show more roles ({filteredJobs.length - visibleCount} remaining)
+                            </button>
+                          </div>
+                        )}
+                      </>
                     )}
                   </section>
                 </>
