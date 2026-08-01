@@ -14,7 +14,7 @@ function initials(name) {
   return words.map((w) => w[0]).join('').slice(0, 4).toUpperCase();
 }
 
-function matchScore(job, tokens) {
+function matchScore(job, tokens, experienceLevel = '') {
   let score = 0;
   const role = job.role.toLowerCase();
   const category = (job.category || '').toLowerCase();
@@ -36,6 +36,19 @@ function matchScore(job, tokens) {
       if (hits > 0) score += hits;
     }
   });
+  // Self-reported experience level nudges ranking rather than filtering
+  // anything out — a fresher's skills might still be a strong match for a
+  // job tagged "experienced", and we don't want to hide that. It just
+  // shouldn't outrank an equally-skill-matched job pitched at their level.
+  if (experienceLevel === 'fresher') {
+    if (job.level === 'fresher') score += 2;
+    else if (job.level === 'both') score += 1;
+    else if (job.level === 'experienced') score -= 2;
+  } else if (experienceLevel === 'experienced') {
+    if (job.level === 'experienced') score += 2;
+    else if (job.level === 'both') score += 1;
+    else if (job.level === 'fresher') score -= 2;
+  }
   return score;
 }
 
@@ -1268,6 +1281,10 @@ export default function App() {
       savedJobIds: meta.saved_job_ids || [],
       alertsEnabled: !!meta.alerts_enabled,
       phone: meta.phone || '',
+      // 'fresher' | 'experienced' | '' (not set) — self-reported once, on
+      // the profile page. Used to nudge "Matched for you" and email alerts
+      // toward jobs pitched at the right level, on top of skill matching.
+      experienceLevel: meta.experience_level || '',
     };
   }, [session]);
 
@@ -1392,6 +1409,17 @@ export default function App() {
     }
   };
 
+  const updateExperienceLevel = async (level) => {
+    if (!currentUser) return;
+    try {
+      await updateUserMetadata({ experience_level: level });
+      showToast('Preferences updated — recommendations refreshed.');
+    } catch (err) {
+      console.error('updateExperienceLevel failed:', err.message);
+      showToast('Could not update — try again.');
+    }
+  };
+
   const submitPhone = async (e) => {
     e.preventDefault();
     if (!currentUser) return;
@@ -1482,7 +1510,7 @@ export default function App() {
     if (!currentUser || !currentUser.skills || currentUser.skills.length === 0) return [];
     const tokens = currentUser.skills.map((s) => s.toLowerCase().trim()).filter((s) => s.length > 1);
     if (!tokens.length) return [];
-    const scored = jobs.map((job) => ({ job, score: matchScore(job, tokens) })).filter((x) => x.score > 0);
+    const scored = jobs.map((job) => ({ job, score: matchScore(job, tokens, currentUser.experienceLevel) })).filter((x) => x.score > 0);
     scored.sort((a, b) => b.score - a.score || a.job.daysAgo - b.job.daysAgo);
     let picks = scored.slice(0, 6).map((x) => x.job);
     // If direct skill matches are thin (skills are real but just don't show
@@ -1720,6 +1748,20 @@ export default function App() {
               <h2 className={`font-semibold text-sm mb-1 ${dark ? 'text-slate-200' : 'text-slate-800'}`}>Skills & interests</h2>
               <p className={`text-xs mb-3 ${dark ? 'text-slate-500' : 'text-slate-400'}`}>Add each skill one at a time — we use these to sort "Matched for you" on Home. Changes save automatically.</p>
               <SkillsInput skills={currentUser.skills} onChange={updateSkills} dark={dark} currentUser={currentUser} />
+            </div>
+
+            <div className={card3D(dark, 'rounded-2xl p-5 mb-6')}>
+              <h2 className={`font-semibold text-sm mb-1 ${dark ? 'text-slate-200' : 'text-slate-800'}`}>Experience level</h2>
+              <p className={`text-xs mb-3 ${dark ? 'text-slate-500' : 'text-slate-400'}`}>Helps us rank "Matched for you" and email alerts toward roles pitched at your level, on top of your skills.</p>
+              <div className="flex flex-wrap gap-2">
+                {[
+                  { val: 'fresher', label: 'Fresher / student' },
+                  { val: 'experienced', label: 'Experienced' },
+                  { val: '', label: 'Not sure yet' },
+                ].map(({ val, label }) => (
+                  <button key={label} onClick={() => updateExperienceLevel(val)} className={pillCls(dark, currentUser.experienceLevel === val)}>{label}</button>
+                ))}
+              </div>
             </div>
 
             <div className={card3D(dark, 'rounded-2xl p-5 mb-6')}>
