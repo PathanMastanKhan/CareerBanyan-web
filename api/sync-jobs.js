@@ -19,6 +19,13 @@ const SEARCH_BUCKETS = [
   { what: 'relationship manager bank', category: 'Finance & Banking', isIT: false },
   { what: 'operations manager', category: 'Operations & Supply Chain', isIT: false },
   { what: 'business analyst', category: 'Business & Analytics', isIT: false },
+  { what: 'pharmacist', category: 'Pharmacy', isIT: false },
+  { what: 'pharmacovigilance', category: 'Pharmacy', isIT: false },
+  { what: 'legal associate', category: 'Law', isIT: false },
+  { what: 'legal counsel compliance', category: 'Law', isIT: false },
+  { what: 'content writer', category: 'Arts & Humanities', isIT: false },
+  { what: 'journalist', category: 'Arts & Humanities', isIT: false },
+  { what: 'social work counsellor', category: 'Arts & Humanities', isIT: false },
 ];
 
 const RESULTS_PER_BUCKET = 20;   // Adzuna allows up to 50 per page
